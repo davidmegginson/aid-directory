@@ -1,3 +1,6 @@
+""" Demonstrate extracting IATI organisation information from D-Portal
+"""
+
 from diterator import Iterator
 
 ROLES = {
@@ -6,29 +9,55 @@ ROLES = {
     '3': 'Extending',
     '4': 'Implementing',
 }
+""" IATI org role codelist """
 
-activities = Iterator({
-    "country_code": "ke",
-    "status_code": "2",   # implementation
-})
 
-for activity in activities:
-    print('Activity:', activity.title)
-    print('', 'Reporting org:', activity.reporting_org.name)
-    for org in activity.participating_orgs:
-        print('', 'Participating org:', org.name, ROLES.get(org.role, "unknown"))
+def org2str (org):
+    orgname = None
+    if org:
+        orgname = str(org.name)
+        if org.ref:
+            orgname = orgname + " (" + org.ref + ")"
+    return orgname
 
+
+def get_connections (activity):
+    """ Return a set of tuples for all the unique provider/receiver org combos in an activity """
     connections = set()
     for transaction in activity.transactions:
         provider_org = None
         receiver_org = None
-        if (transaction.provider_org):
-            provider_org = str(transaction.provider_org)
-        if (transaction.receiver_org):
-            receiver_org = str(transaction.receiver_org)
+        provider_org = org2str(transaction.provider_org)
+        receiver_org = org2str(transaction.receiver_org)
         if provider_org or receiver_org:
             connections.add((provider_org, receiver_org,))
-        if len(connections) > 0:
-            print('', 'Connections:')
-            for connection in connections:
-                print('', '', connection[0], '=>', connection[1])
+    return connections
+
+
+def show_activity (activity):
+    """ Display an activity to standard output """
+    print('Activity:', activity.title)
+    print('', 'Reporting org:', org2str(activity.reporting_org))
+    for org in activity.participating_orgs:
+        print('', 'Participating org (' + ROLES.get(org.role, "unknown") + '):', org2str(org))
+        
+    connections = get_connections(activity)
+    if len(connections) > 0:
+        print('', 'Connections:')
+        for connection in connections:
+            print('', '', connection[0], '=>', connection[1])
+
+
+def show_activities (activities):
+    """ Display a list of activities to standard output """
+    for activity in activities:
+        show_activity(activity)
+
+
+# Main entry point
+
+activities = Iterator({
+    "country_code": "ke", # Kenya
+    "status_code": "2",   # implementation
+})
+show_activities(activities)
