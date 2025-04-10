@@ -1,6 +1,7 @@
 """ Demonstrate extracting IATI organisation information from D-Portal
 """
 
+import csv, sys
 from diterator import Iterator
 
 ROLES = {
@@ -21,37 +22,48 @@ def org2str (org):
     return orgname
 
 
-def get_connections (activity):
-    """ Return a set of tuples for all the unique provider/receiver org combos in an activity """
-    connections = set()
-    for transaction in activity.transactions:
-        provider_org = None
-        receiver_org = None
-        provider_org = org2str(transaction.provider_org)
-        receiver_org = org2str(transaction.receiver_org)
-        if provider_org or receiver_org:
-            connections.add((provider_org, receiver_org,))
-    return connections
+def show_org (output, org, activity, default_role='', transaction_ref='', transaction_num=''):
+    output.writerow([
+        org.name,
+        org.ref,
+        'iati',
+        activity.title,
+        activity.identifier,
+        org.role if org.role else default_role,
+        transaction_ref,
+        transaction_num,
+    ])
 
 
-def show_activity (activity):
+def show_activity (output, activity):
     """ Display an activity to standard output """
-    print('Activity:', activity.title)
-    print('', 'Reporting org:', org2str(activity.reporting_org))
-    for org in activity.participating_orgs:
-        print('', 'Participating org (' + ROLES.get(org.role, "unknown") + '):', org2str(org))
-        
-    connections = get_connections(activity)
-    if len(connections) > 0:
-        print('', 'Connections:')
-        for connection in connections:
-            print('', '', connection[0], '=>', connection[1])
+    show_org(output, activity.reporting_org, activity, 'reporting')
 
+    for org in activity.participating_orgs:
+        show_org(output, org, activity)
+
+    # TODO reduce transactions to unique combos
+    for (n, transaction) in enumerate(activity.transactions):
+        if transaction.provider_org:
+            show_org(transaction.provider_org, activity, 'provider', transaction.ref, n)
+        if transaction.receiver_org:
+            show_org(output, transaction.receiver_org, activity, 'receiver', transaction.ref, n)
 
 def show_activities (activities):
     """ Display a list of activities to standard output """
+    output = csv.writer(sys.stdout)
+    output.writerow([
+        'org_name',
+        'org_id',
+        'source',
+        'activity_name',
+        'activity_id',
+        'org_role',
+        'transaction_num',
+        'transaction_id',
+    ])
     for activity in activities:
-        show_activity(activity)
+        show_activity(output, activity)
 
 
 # Main entry point
