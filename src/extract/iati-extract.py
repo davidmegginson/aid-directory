@@ -1,7 +1,7 @@
 """ Demonstrate extracting IATI organisation information from D-Portal
 
 TODO:
-- fill in missing countries and sector names
+
 - maybe handle regions
 - make search country configurable
 - maybe switch to IATI Datastore
@@ -14,9 +14,14 @@ from diterator import Iterator
 
 
 CODELISTS = dict()
+""" Global cache of loaded IATI codelists
+"""
 
 
 def get_codelist (name):
+    """ Load a codelist the first time it's used, then cache it.
+    """
+    
     global CODELISTS
 
     if not name in CODELISTS:
@@ -32,13 +37,28 @@ def get_codelist (name):
 
 
 def is_humanitarian (activity):
-    if activity.humanitarian:
+    """ Test if an IATI activity appears to be humanitarian
+
+    True if any of the following applies:
+    
+    1. Humanitarian flag is set on the activity
+    2. Humanitarian flag is set on any transaction
+    3. The humanitarian_scope element is present
+    4. A DAC sector code in the 720, 730, or 740 series is present
+    5. The DAC sector code 43060 is present
+    6. A sector in the vocabulary '10' (Humanitarian Global Clusters) is present
+    
+    """
+    
+    if activity.humanitarian or len(activity.humanitarian_scopes) > 0:
         return True
     for transaction in activity.transactions:
         if transaction.humanitarian:
             return True;
     for sector in activity.sectors:
-        if sector.vocabulary == 1 and (sector.code.startswith('720') or sector.code.startswith('730') or sector.code.startswith('740') or sector.code == '43060'):
+        if sector.vocabulary == '1' and (sector.code.startswith('720') or sector.code.startswith('730') or sector.code.startswith('740') or sector.code == '43060'):
+            return True
+        elif sector.vocabulary == '10':
             return True
     return False;
 
@@ -46,6 +66,7 @@ def is_humanitarian (activity):
 def reduce_transactions (activity):
     """ Reduce an IATI activity's transaction to a list of unique org pairs
     Each pair represents a provider/receiver relationship (1 or more transactions)
+
     """
 
     def org2tuple (org):
@@ -67,27 +88,31 @@ def reduce_transactions (activity):
         
 
 def show_org (output, org, activity, country, sector, default_role='', relationship_index=''):
+    """ Write a data row to the CSV output
+    """
 
+    # USAID redacts a lot of org info; skip that
     if "USAID redacted" in str(org.name):
         return;
 
+    # Fill in the country name from default codelist if not supplied
     country_name = str(country.narrative)
     if not country_name:
         country_name = get_codelist('Country').get(country.code, '')
 
+    # if the sector vocabulary is DAC, roll up to 3-digit category codes
     sector_code = sector.code
     sector_vocabulary = sector.vocabulary
     if sector_vocabulary == '1':
-        # roll up to 3-digit DAC codes
         sector_vocabulary = '2'
         sector_code = sector_code[:3]
 
+    # fill in the sector name from default codelist if not supplied
     sector_name = str(sector.narrative)
     if not sector_name and sector.vocabulary == '1':
         sector_name = get_codelist('SectorCategory').get(sector_code, '')
 
-    humanitarian = "1" if is_humanitarian(activity) else "0"
-    
+    # write a row of CSV data
     output.writerow([
         org.name,
         org.ref,
@@ -95,7 +120,7 @@ def show_org (output, org, activity, country, sector, default_role='', relations
         'iati',
         activity.title,
         activity.identifier,
-        humanitarian,
+        "1" if is_humanitarian(activity) else "0",
         country_name,
         country.code,
         sector_name,
@@ -107,6 +132,9 @@ def show_org (output, org, activity, country, sector, default_role='', relations
 
 
 def show_activity (output, activity):
+    """ Show all of the org info for an IATI activity
+    Includes a separate row for each country/sector/org/role/relationship combo
+    """
 
     for country in activity.recipient_countries:
 
@@ -126,9 +154,15 @@ def show_activity (output, activity):
                     show_org(output, relationship[1], activity, country, sector, 'Receiver', n)
 
             
-def show_activities (activities):
-    """ Display a list of activities to standard output """
-    output = csv.writer(sys.stdout)
+def show_activities (activities, file=None):
+    """ Display a list of activities (defaults to standard output) """
+
+    if file is None:
+        file = sys.stdout
+
+    output = csv.writer(file)
+    
+    # CSV headers
     output.writerow([
         'org_name',
         'org_id',
@@ -145,6 +179,8 @@ def show_activities (activities):
         'org_role',
         'relationship_index',
     ])
+
+    # CSV data rows
     for activity in activities:
         show_activity(output, activity)
 
