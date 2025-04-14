@@ -1,6 +1,10 @@
 INPUTS_DIR=../inputs
 OUTPUTS_DIR=../outputs
-METADATA=${INPUTS_DIR}/Country.json ${INPUTS_DIR}/SectorCategory.json
+METADATA=${INPUTS_DIR}/OrganisationRole.json \
+  ${INPUTS_DIR}/OrganisationType.json \
+  ${INPUTS_DIR}/Country.json \
+  ${INPUTS_DIR}/SectorCategory.json \
+  ${INPUTS_DIR}/SectorVocabulary.json
 
 
 all: ${OUTPUTS_DIR}/orgs.csv

@@ -12,17 +12,24 @@ TODO:
 import csv, json, sys
 from diterator import Iterator
 
-ROLES = {
-    '1': 'Funding',
-    '2': 'Accountable',
-    '3': 'Extending',
-    '4': 'Implementing',
-}
-""" IATI org role codelist """
 
-country_map = None
+CODELISTS = dict()
 
-sector_map = None
+
+def get_codelist (name):
+    global CODELISTS
+
+    if not name in CODELISTS:
+        codelist = dict()
+        path = "../inputs/{}.json".format(name)
+        with open(path, 'r') as input:
+            data = json.load(input)
+            for item in data['data']:
+                codelist[item['code']] = item['name']
+        CODELISTS[name] = codelist
+
+    return CODELISTS[name]
+
 
 def is_humanitarian (activity):
     if activity.humanitarian:
@@ -35,25 +42,6 @@ def is_humanitarian (activity):
             return True
     return False;
 
-def load_codelist (path):
-    codelist = dict()
-    with open(path, 'r') as input:
-        data = json.load(input)
-        for item in data['data']:
-            codelist[item['code']] = item['name']
-    return codelist
-
-def get_country_map ():
-    global country_map
-    if country_map is None:
-        country_map = load_codelist("../inputs/Country.json")
-    return country_map
-
-def get_sector_map ():
-    global sector_map
-    if sector_map is None:
-        sector_map = load_codelist("../inputs/SectorCategory.json")
-    return sector_map
 
 def reduce_transactions (activity):
     """ Reduce an IATI activity's transaction to a list of unique org pairs
@@ -85,21 +73,25 @@ def show_org (output, org, activity, country, sector, default_role='', relations
 
     country_name = str(country.narrative)
     if not country_name:
-        country_name = get_country_map().get(country.code, '')
+        country_name = get_codelist('Country').get(country.code, '')
 
     sector_code = sector.code
-    if sector.vocabulary == '1':
+    sector_vocabulary = sector.vocabulary
+    if sector_vocabulary == '1':
+        # roll up to 3-digit DAC codes
+        sector_vocabulary = '2'
         sector_code = sector_code[:3]
 
     sector_name = str(sector.narrative)
     if not sector_name and sector.vocabulary == '1':
-        sector_name = get_sector_map().get(sector_code, '')
+        sector_name = get_codelist('SectorCategory').get(sector_code, '')
 
     humanitarian = "1" if is_humanitarian(activity) else "0"
     
     output.writerow([
         org.name,
         org.ref,
+        get_codelist('OrganisationType').get(org.type) if org.type else '',
         'iati',
         activity.title,
         activity.identifier,
@@ -108,8 +100,8 @@ def show_org (output, org, activity, country, sector, default_role='', relations
         country.code,
         sector_name,
         sector_code,
-        sector.vocabulary,
-        ROLES.get(org.role) if org.role else default_role,
+        get_codelist('SectorVocabulary').get(sector_vocabulary, ''),
+        get_codelist('OrganisationRole').get(org.role, '') if org.role else default_role,
         relationship_index,
     ])
 
@@ -140,6 +132,7 @@ def show_activities (activities):
     output.writerow([
         'org_name',
         'org_id',
+        'org_type',
         'source',
         'activity_name',
         'activity_id',
