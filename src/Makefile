@@ -13,6 +13,9 @@ ${OUTPUTS_DIR}/orgs.csv: venv extract/iati-extract.py ${METADATA}
 	mkdir -p ${OUTPUTS_DIR}
 	. .venv/bin/activate && python extract/iati-extract.py > ${OUTPUTS_DIR}/orgs.csv
 
+show-org: venv
+	. .venv/bin/activate && python show-org.py
+
 venv: .venv/bin/activate
 
 .venv/bin/activate: requirements.txt
