@@ -2,6 +2,21 @@ import csv
 
 ORG = 'UNICEF'
 
+def pipeline(*funcs):
+    """ Create a reusable function pipeline """
+    def inner(data):
+        result = data
+        for func in funcs:
+            result = func(result)
+        return result
+    return inner
+
+
+def pipe (arg, *funcs):
+    """ Create a temporary pipeline and execute it with a single argument. """
+    return pipeline(*funcs)(arg)
+
+
 def read_csv(path):
     with open(path, 'r') as file:
         input = csv.DictReader(file)
@@ -29,13 +44,37 @@ def unique(source, name, include_empty=False):
 
 print(ORG, "\n")
 
-data = list(filter(filter(read_csv('../outputs/orgs.csv'), 'org_name', ORG), 'country_name', 'Madagascar'))
+data = pipe(
+    read_csv('../outputs/orgs.csv'),
+    lambda x: filter(x, 'org_name', ORG),
+    lambda x: filter(x, 'country_name', 'Madagascar'),
+    lambda x: list(x),
+)
 
-receivers = list(filter(read_csv('../outputs/relationships.csv'), 'provider_org_name', ORG))
-providers = list(filter(read_csv('../outputs/relationships.csv'), 'receiver_org_name', ORG))
+#data = list(filter(filter(read_csv('../outputs/orgs.csv'), 'org_name', ORG), 'country_name', 'Madagascar'))
+
+receivers = pipe(
+    read_csv('../outputs/relationships.csv'),
+    lambda x: filter(x, 'provider_org_name', ORG),
+    lambda x: list(x),
+)
+
+providers = pipe(
+    read_csv('../outputs/relationships.csv'),
+    lambda x: filter(x, 'receiver_org_name', ORG),
+    lambda x: list(x),
+)
+
+#receivers = list(filter(read_csv('../outputs/relationships.csv'), 'provider_org_name', ORG))
+#providers = list(filter(read_csv('../outputs/relationships.csv'), 'receiver_org_name', ORG))
 
 activities = unique(data, 'activity_id')
-activity_data = list(filter(read_csv('../outputs/orgs.csv'), 'activity_id', activities))
+activity_data = pipe(
+    read_csv('../outputs/orgs.csv'),
+    lambda x: filter(x, 'activity_id', activities),
+    lambda x: list(x),
+)
+#activity_data = list(filter(read_csv('../outputs/orgs.csv'), 'activity_id', activities))
 
 print("\nCountries:\n- ", "\n- ".join(sorted(unique(data, 'country_name'))))
 print("\nSectors:\n- ", "\n- ".join(sorted(unique(data, 'sector_name'))))
