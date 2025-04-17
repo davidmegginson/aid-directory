@@ -187,8 +187,9 @@ def show_activities (activities, file=None):
 
 # Main entry point
 
-activities = Iterator({
-    "country_code": "mg", # Kenya
-    "status_code": "2",   # implementation
-})
-show_activities(activities)
+if __name__ == '__main__':
+    activities = Iterator({
+        "country_code": "mg", # Kenya
+        "status_code": "2",   # implementation
+    })
+    show_activities(activities)
