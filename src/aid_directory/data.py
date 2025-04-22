@@ -20,7 +20,16 @@ def get_org (org_id):
     org['id'] = org_id
     if len(data) > 0:
         org['name'] = data[0].get('org_name') # fixme: multiple names?
-        org['type'] = data[0].get('org_type') # fixme: multiple types?
+
+    org['types'] = pipe(
+        data,
+        lambda x: unique(x, 'org_type')
+    )
+
+    org['aliases'] = pipe(
+        data,
+        lambda x: unique(x, 'org_name')
+    )
 
     org['receivers'] = pipe(
         read_csv(relationships_file),

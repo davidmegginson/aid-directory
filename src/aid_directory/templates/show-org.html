@@ -7,25 +7,83 @@
     <h1>Organisation: {{ org.name }}</h1>
 
     <p>
-      Type:
-      {{ org.type }}
+      IATI id:
+      {{ org.id }}
     </p>
+
+    <p>
+      Aliases:
+    </p>
+
+    <ul>
+      {% for alias in org.aliases | sort %}
+      <li>{{ alias }}</li>
+      {% endfor %}
+    </ul>
+
+    <p>
+      Types:
+    </p>
+
+    <ul>
+      {% for type in org.types | sort %}
+      <li>{{ type }}</li>
+      {% endfor %}
+    </ul>
     
     <p>
       Roles:
-      {% for role in org.roles %}
-      {{ role }}
-      {% endfor %}
     </p>
+
+    <ul>
+      {% for role in org.roles | sort %}
+      <li>{{ role }}</li>
+      {% endfor %}
+    </ul>
 
     <section id="partners">
       <h2>Partners</h2>
 
       <ul>
         {% for partner in org.partners %}
+        {% if partner.org_id %}
         <li><a href="/orgs/{{ partner.org_id }}/">{{ partner.org_name }}</a> ({{ partner.org_role }})</li>
+        {% else %}
+        <li>{{ partner.org_name }} ({{ partner.org_role }})</li>
+        {% endif %}
         {% endfor %}
       </ul>
+      
+    </section>
+
+    <section id="relationships">
+      <h2>Direct funding relationships</h2>
+
+      <section id="providers">
+        <h3>Funding providers</h3>
+        {% if org.providers %}
+        <ul>
+          {% for relationship in org.providers %}
+          <li><a href="/orgs/{{ relationship.provider_org_id }}/">{{ relationship.provider_org_name }}</a></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p><i>None known</i></p>
+        {% endif %}
+      </section>
+      
+      <section id="recipients">
+        <h3>Funding recipients</h3>
+        {% if org.recipients %}
+        <ul>
+          {% for relationship in org.recipients %}
+          <li><a href="/orgs/{{ relationship.provider_org_id }}/">{{ relationship.provider_org_name }}</a></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p><i>None known</i></p>
+        {% endif %}
+      </section>
       
     </section>
   </body>
