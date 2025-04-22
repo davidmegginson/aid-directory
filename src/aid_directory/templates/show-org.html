@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Organisation: {{ org.name }}</title>
+  </head>
+  <body>
+    <h1>Organisation: {{ org.name }}</h1>
+
+    <p>
+      Type:
+      {{ org.type }}
+    </p>
+    
+    <p>
+      Roles:
+      {% for role in org.roles %}
+      {{ role }}
+      {% endfor %}
+    </p>
+
+    <section id="partners">
+      <h2>Partners</h2>
+
+      <ul>
+        {% for partner in org.partners %}
+        <li><a href="/orgs/{{ partner.org_id }}/">{{ partner.org_name }}</a> ({{ partner.org_role }})</li>
+        {% endfor %}
+      </ul>
+      
+    </section>
+  </body>
+</html>

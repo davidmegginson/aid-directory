@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Organisations</title>
+  </head>
+  <body>
+    <h1>Organisations</h1>
+    <ul>
+      {% for org in orgs %}
+      <li><a href="/orgs/{{ org.org_id }}/">{{ org.org_name }}</a> ({{ org.org_type }})</li>
+      {% endfor %}
+    </ul>
+  </body>
+</html>

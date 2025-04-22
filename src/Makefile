@@ -7,7 +7,10 @@ METADATA=${INPUTS_DIR}/OrganisationRole.json \
   ${INPUTS_DIR}/SectorVocabulary.json
 
 
-all: relationships
+all: show-org
+
+run-app:
+	. .venv/bin/activate && python -m flask --app aid_directory --debug run
 
 relationships: ${OUTPUTS_DIR}/relationships.csv
 

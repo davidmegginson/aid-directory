@@ -1,6 +1,7 @@
 import csv
 
-ORG = 'UNICEF'
+ORG = 'GB-GOV-1',
+
 
 def pipeline(*funcs):
     """ Create a reusable function pipeline """
@@ -46,27 +47,23 @@ print(ORG, "\n")
 
 data = pipe(
     read_csv('../outputs/orgs.csv'),
-    lambda x: filter(x, 'org_name', ORG),
+    lambda x: filter(x, 'org_id', ORG),
     lambda x: filter(x, 'country_name', 'Madagascar'),
     lambda x: list(x),
 )
 
-#data = list(filter(filter(read_csv('../outputs/orgs.csv'), 'org_name', ORG), 'country_name', 'Madagascar'))
-
 receivers = pipe(
     read_csv('../outputs/relationships.csv'),
-    lambda x: filter(x, 'provider_org_name', ORG),
+    lambda x: filter(x, 'provider_org_code', ORG),
     lambda x: list(x),
 )
 
 providers = pipe(
     read_csv('../outputs/relationships.csv'),
-    lambda x: filter(x, 'receiver_org_name', ORG),
+    lambda x: filter(x, 'receiver_org_code', ORG),
     lambda x: list(x),
 )
 
-#receivers = list(filter(read_csv('../outputs/relationships.csv'), 'provider_org_name', ORG))
-#providers = list(filter(read_csv('../outputs/relationships.csv'), 'receiver_org_name', ORG))
 
 activities = unique(data, 'activity_id')
 activity_data = pipe(
@@ -74,9 +71,15 @@ activity_data = pipe(
     lambda x: filter(x, 'activity_id', activities),
     lambda x: list(x),
 )
-#activity_data = list(filter(read_csv('../outputs/orgs.csv'), 'activity_id', activities))
 
-print("\nCountries:\n- ", "\n- ".join(sorted(unique(data, 'country_name'))))
+countries = pipe(
+    data,
+    lambda x: unique(x, 'country_name'),
+    sorted,
+)
+
+#print("\nCountries:\n- ", "\n- ".join(sorted(unique(data, 'country_name'))))
+print("\nCountries:\n- ", "\n- ".join(countries))
 print("\nSectors:\n- ", "\n- ".join(sorted(unique(data, 'sector_name'))))
 print("\nRoles:", ", ".join(sorted(unique(data, 'org_role'))))
 print("\nActivities:", ", ".join(sorted(activities)))
