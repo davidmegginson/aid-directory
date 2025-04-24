@@ -11,67 +11,34 @@ def get_org (org_id):
 
     org = dict()
 
-    data = pipe(
-        read_csv(org_file),
-        lambda x: filter(x, 'org_id', org_id),
-        lambda x: list(x),
-    )
+    data = Data(read_csv(org_file)).has('org_id', org_id).cache()
 
     org['id'] = org_id
-    if len(data) > 0:
-        org['name'] = data[0].get('org_name') # fixme: multiple names?
+    org['name'] = next(iter(data)).get('org_name')
 
-    org['types'] = pipe(
-        data,
-        lambda x: unique(x, 'org_type')
-    )
+    org['types'] = data.unique('org_type')
 
-    org['aliases'] = pipe(
-        data,
-        lambda x: unique(x, 'org_name')
-    )
+    org['aliases'] = data.unique('org_name')
 
-    org['receivers'] = pipe(
-        read_csv(relationships_file),
-        lambda x: filter(x, 'provider_org_code', org_id),
-        lambda x: list(x),
-    )
+    org['receivers'] = Data(read_csv(relationships_file)).has('provider_org_code', org_id).cache()
+    org['providers'] = Data(read_csv(relationships_file)).has('receiver_org_code', org_id).cache()
 
-    org['providers'] = pipe(
-        read_csv(relationships_file),
-        lambda x: filter(x, 'receiver_org_code', org_id),
-        lambda x: list(x),
-    )
+    org['activities'] = data.unique(['activity_title', 'activity_id'])
 
-    org['activities'] = unique(data, ['activity_title', 'activity_id'])
-    activity_data = pipe(
-        read_csv('../outputs/orgs.csv'),
-        lambda x: filter(x, 'activity_id', [activity['activity_id'] for activity in org['activities']]),
-        lambda x: list(x),
-    )
+    # operator.contains is in the wrong order :(
+    activity_data = Data(read_csv('../outputs/orgs.csv')).has('activity_id', org['activities'].unique('activity_id'), lambda x, y: x in y).cache()
 
-    org['countries'] = pipe(
-        data,
-        lambda x: unique(x, ['country_name', 'country_code']),
-    )
+    org['countries'] = data.unique(('country_name', 'country_code',))
 
-
-    org['sectors'] = unique(data, ['sector_name', 'sector_code'])
-    org['roles'] = unique(data, 'org_role')
+    org['sectors'] = data.unique(['sector_name', 'sector_code'])
+    org['roles'] = data.unique('org_role')
     org['activities'] = activity_data
-    org['partners'] = pipe(
-        activity_data,
-        lambda x: filter(x, 'org_id', org_id, True),
-        lambda x: unique(x, ['org_name', 'org_id', 'org_type', 'org_role']),
-    )
+    org['partners'] = activity_data.has('org_id', org_id, negate=True).unique(('org_name', 'org_id', 'org_type', 'org_role',))
 
     return org
 
 
 def get_orgs ():
 
-    return pipe(
-        read_csv(org_file),
-        lambda x: unique(x, ('org_name', 'org_id', 'org_type')),
-    )
+    return Data(read_csv(org_file)).unique(('org_name', 'org_id', 'org_type'))
     

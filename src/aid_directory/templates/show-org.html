@@ -2,6 +2,9 @@
 <html>
   <head>
     <title>Organisation: {{ org.name }}</title>
+    <nav>
+      <a href="/orgs/">Organisations</a>
+    </nav>
   </head>
   <body>
     <h1>Organisation: {{ org.name }}</h1>
@@ -46,11 +49,11 @@
 
       <ul>
         {% for partner in org.partners %}
-        {% if partner.org_id %}
-        <li><a href="/orgs/{{ partner.org_id }}/">{{ partner.org_name }}</a> ({{ partner.org_role }})</li>
-        {% else %}
-        <li>{{ partner.org_name }} ({{ partner.org_role }})</li>
-        {% endif %}
+        <li>
+          {% with org=partner %}
+          {% include "includes/org.html" %}
+          {% endwith %}
+        </li>
         {% endfor %}
       </ul>
       

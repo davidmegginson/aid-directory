@@ -1,17 +1,51 @@
-import csv
+import csv, operator
 
-def pipeline(*funcs):
-    """ Create a reusable function pipeline """
-    def inner(data):
-        result = data
-        for func in funcs:
-            result = func(result)
-        return result
-    return inner
 
-def pipe (arg, *funcs):
-    """ Create a temporary pipeline and execute it with a single argument. """
-    return pipeline(*funcs)(arg)
+class Data:
+
+    def __init__ (self, source):
+        self.source = source
+
+    def __iter__ (self):
+        return iter(self.source)
+
+    def _filter (self, f, negate=False):
+        def process (source):
+            for row in source:
+                if f(row) ^ negate:
+                    yield row
+        return Data(process(self.source))
+
+    def _transform (self, f):
+        def process (source):
+            for row in source:
+                yield f(row)
+        return Data(process(self.source))
+
+    def _aggregate (self, f, unpack=False):
+        result = set()
+        def do_unpack ():
+            for row in result:
+                yield dict(row)
+        for row in self.source:
+            f(result, row)
+        return Data(do_unpack()) if unpack else result
+
+    def has (self, key, value, op=operator.eq, negate=False):
+        return self._filter(lambda row: op(row.get(key), value), negate)
+
+    def unique (self, keys, op=operator.eq):
+        if type('') == type(keys):
+            return self._aggregate(lambda result, row: result.add(row.get(keys)))
+        else:
+            return self._aggregate(lambda result, row: result.add(tuple([(key, row.get(key),) for key in keys ])), unpack=True)
+
+    def cache (self):
+        return Data(list(iter(self)))
+
+    def sort (self, key=None, reverse=False):
+        return Data(sorted(iter(self.source), key, reverse))
+
 
 def read_csv(path):
     with open(path, 'r') as file:
@@ -19,40 +53,3 @@ def read_csv(path):
         for row in input:
             yield row
 
-def filter(source, name, values, invert=False):
-    if type(values) == type(''):
-        values = (values,)
-    for row in source:
-        if (not invert and row[name] in values):
-            yield row
-        elif (invert and row[name] not in values):
-            yield row
-
-            
-def unique(source, keys, include_empty=False):
-    """ Generate a sequence of unique values for the keys provided
-
-    If keys is a string, return a sequence of scalars; otherwise,
-    return a sequence of dicts.
-    """
-
-    result = set()
-
-    # Case 1: a single column: return set of scalars
-    if type('') == type(keys):
-        for row in source:
-            value = row.get(keys)
-            if include_empty or value is not None:
-                result.add(value)
-        return result
-
-    # Case 2: multiple columns: return list of dicts
-    else:
-        for row in source:
-            values = dict()
-            for key in keys:
-                value = row.get(key)
-                if include_empty or value is not None:
-                    values[key] = value
-            result.add(tuple(values.items()))
-        return [dict(item) for item in result]

@@ -1,0 +1,10 @@
+<span>
+  {% if org.org_id %}
+  <a href="/orgs/{{ org.org_id }}/">{{ org.org_name }}</a>
+  {% else %}
+  {{ org.org_name }}
+  {% endif %}
+  {% if org.org_role %}
+  ({{ org.org_role }})
+  {% endif %}
+</span>
