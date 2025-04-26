@@ -2,12 +2,14 @@
 <html>
   <head>
     <title>Organisation: {{ org.name }}</title>
-    <nav>
-      <a href="/orgs/">Organisations</a>
-    </nav>
   </head>
   <body>
-    <h1>Organisation: {{ org.name }}</h1>
+    <header>
+      <nav>
+        <a href="/orgs/">Organisations</a>
+      </nav>
+      <h1>Organisation: {{ org.name }}</h1>
+    </header>
 
     <p>
       IATI id:
@@ -20,7 +22,9 @@
 
     <ul>
       {% for alias in org.aliases | sort %}
+      {% if alias != org.name %}
       <li>{{ alias }}</li>
+      {% endif %}
       {% endfor %}
     </ul>
 
@@ -44,19 +48,32 @@
       {% endfor %}
     </ul>
 
+    <p>
+      Sectors
+    </p>
+
+    <ul>
+      {% for sector in org.sectors %}
+      <li><a href="/sectors/{{ sector.sector_type_code }}/{{ sector.sector_code }}/">{{ sector.sector_name }}</a></li>
+      {% endfor %}
+    </ul>
+
     <section id="partners">
       <h2>Partners</h2>
 
-      <ul>
-        {% for partner in org.partners %}
-        <li>
+      {% for org_role in org.partners.unique('org_role') | sort %}
+      <section>
+        <h3>{{ org_role }}</h3>
+        <ul>
+          {% for partner in org.partners.has('org_role', org_role) %}
           {% with org=partner %}
-          {% include "includes/org.html" %}
+          <li>{% include "includes/org.html" %}</li>
           {% endwith %}
-        </li>
-        {% endfor %}
-      </ul>
-      
+          {% endfor %}
+        </ul>
+      </section>
+      {% endfor %}
+
     </section>
 
     <section id="relationships">

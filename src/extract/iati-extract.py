@@ -126,6 +126,7 @@ def show_org (output, org, activity, country, sector, default_role='', relations
         sector_name,
         sector_code,
         get_codelist('SectorVocabulary').get(sector_vocabulary, ''),
+        sector.vocabulary,
         get_codelist('OrganisationRole').get(org.role, '') if org.role else default_role,
         relationship_index,
     ])
@@ -176,6 +177,7 @@ def show_activities (activities, file=None):
         'sector_name',
         'sector_code',
         'sector_type',
+        'sector_type_code',
         'org_role',
         'relationship_index',
     ])

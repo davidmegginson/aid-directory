@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Sector: {{ sector.name }}</title>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <a href="/sectors/">Sectors</a>
+      </nav>
+      <h1>Sector: {{ sector.name }}</h1>
+    </header>
+
+    <p>
+      Sector type:
+      {{ sector.type }}
+    </p>
+
+    <p>
+      Sector code:
+      {{ sector.code }}
+    </p>
+
+    <p>
+      Aliases:
+    </p>
+
+    <ul>
+      {% for alias in sector.aliases | sort %}
+      <li>{{ alias }}</li>
+      {% endfor %}
+    </ul>
+
+    <section id="orgs">
+      <h2>Organisations</h2>
+
+      {% for role in sector.orgs.unique('org_role') | sort %}
+
+      <section>
+        <h3>{{ role }}</h3>
+
+        <ul>
+          {% for org in sector.orgs.has('org_role', role) %}
+          <li>{% include "includes/org.html" %}</li>
+          {% endfor %}
+        </ul>
+
+      </section>
+
+      {% endfor %}
+      
+    </section>
+
+  </body>
+</html>

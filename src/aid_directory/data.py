@@ -30,12 +30,28 @@ def get_org (org_id):
 
     org['countries'] = data.unique(('country_name', 'country_code',))
 
-    org['sectors'] = data.unique(['sector_name', 'sector_code'])
+    org['sectors'] = data.unique(['sector_name', 'sector_code', 'sector_type', 'sector_type_code'])
     org['roles'] = data.unique('org_role')
     org['activities'] = activity_data
-    org['partners'] = activity_data.has('org_id', org_id, negate=True).unique(('org_name', 'org_id', 'org_type', 'org_role',))
+    org['partners'] = activity_data.has('org_id', org_id, negate=True).unique(('org_name', 'org_id', 'org_type', 'org_role',)).cache()
 
     return org
+
+
+def get_sector (sector_type_code, sector_code):
+
+    sector = dict()
+
+    data = Data(read_csv(org_file)).has('sector_type_code', sector_type_code).has('sector_code', sector_code).cache()
+
+    sector['name'] = next(iter(data)).get('sector_name')
+    sector['type'] = next(iter(data)).get('sector_type')
+    sector['code'] = sector_code
+
+    sector['aliases'] = data.unique('sector_name');
+    sector['orgs'] = data.unique(['org_name', 'org_id', 'org_type', 'org_role']).cache()
+
+    return sector
 
 
 def get_orgs ():
