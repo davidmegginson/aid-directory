@@ -7,6 +7,12 @@ package_directory = os.path.dirname(os.path.abspath(__file__))
 org_file = os.path.join(package_directory, '../../outputs/orgs.csv')
 relationships_file = os.path.join(package_directory, '../../outputs/relationships.csv')
 
+
+def get_orgs ():
+
+    return Data(read_csv(org_file)).unique(('org_name', 'org_id', 'org_type'))
+    
+
 def get_org (org_id):
 
     org = dict()
@@ -38,11 +44,23 @@ def get_org (org_id):
     return org
 
 
-def get_sector (sector_type_code, sector_code):
+
+def get_sectors ():
+
+    # Fixme add reporting org id for 98 and 99 vocabularies
+    return Data(read_csv(org_file)).unique(['sector_name', 'sector_code', 'sector_type', 'sector_type_code']).cache()
+    
+
+
+def get_sector (sector_type_code, sector_code, org_id=None):
 
     sector = dict()
 
-    data = Data(read_csv(org_file)).has('sector_type_code', sector_type_code).has('sector_code', sector_code).cache()
+    # FIXME: wrong. Should always use reporting org id
+    if org_id is None:
+        data = Data(read_csv(org_file)).has('sector_type_code', sector_type_code).has('sector_code', sector_code).cache()
+    else:
+        data = Data(read_csv(org_file)).has('sector_type_code', sector_type_code).has('sector_code', sector_code).has('org_id', org_id).cache()
 
     sector['name'] = next(iter(data)).get('sector_name')
     sector['type'] = next(iter(data)).get('sector_type')
@@ -54,7 +72,3 @@ def get_sector (sector_type_code, sector_code):
     return sector
 
 
-def get_orgs ():
-
-    return Data(read_csv(org_file)).unique(('org_name', 'org_id', 'org_type'))
-    

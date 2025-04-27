@@ -14,7 +14,13 @@ def show_org(org_id):
     org = data.get_org(org_id)
     return render_template('show-org.html', org=org)
 
+@app.route("/sectors/")
+def show_sectors():
+    sectors = data.get_sectors()
+    return render_template('list-sectors.html', sectors=sectors)
+
 @app.route("/sectors/<sector_type>/<sector_code>/")
-def show_sector(sector_type, sector_code):
-    sector = data.get_sector(sector_type, sector_code)
+@app.route("/sectors/<sector_type>/<org_id>/<sector_code>/")
+def show_sector(sector_type, sector_code, org_id=None):
+    sector = data.get_sector(sector_type, sector_code, org_id)
     return render_template('show-sector.html', sector=sector)

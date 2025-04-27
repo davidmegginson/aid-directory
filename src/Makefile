@@ -34,3 +34,5 @@ ${OUTPUTS_DIR}/relationships.csv: ${OUTPUTS_DIR}/orgs.csv venv get-relationships
 .venv/bin/activate: requirements.txt
 	python3 -m venv .venv && . .venv/bin/activate && pip3 install -r requirements.txt
 
+tags:
+	find . -name '*.py' -o -name '*.html' | xargs etags

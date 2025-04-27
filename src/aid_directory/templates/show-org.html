@@ -54,7 +54,11 @@
 
     <ul>
       {% for sector in org.sectors %}
+      {% if sector.sector_type_code in ['98', '99'] %}
+      <li><a href="/sectors/{{ sector.sector_type_code }}/{{ org.id }}/{{ sector.sector_code }}/">{{ sector.sector_name }}</a></li>
+      {% else %}
       <li><a href="/sectors/{{ sector.sector_type_code }}/{{ sector.sector_code }}/">{{ sector.sector_name }}</a></li>
+      {% endif %}
       {% endfor %}
     </ul>
 

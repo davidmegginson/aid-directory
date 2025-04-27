@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Sectors</title>
+  </head>
+  <body>
+    <h1>Sectors</h1>
+
+    {% for type in sectors.unique('sector_type') %}
+    <section>
+      <h2>{{ type }}</h2>
+    
+      <ul>
+        {% for sector in sectors.has('sector_type', type) %}
+        <li>{% include "includes/sector.html" %}</li>
+        {% endfor %}
+      </ul>
+
+    </section>
+    {% endfor %}
+    
+  </body>
+</html>
