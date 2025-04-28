@@ -40,6 +40,28 @@ class Data:
         else:
             return self._aggregate(lambda result, row: result.add(tuple([(key, row.get(key),) for key in keys ])), unpack=True)
 
+    def count (self, keys, new_key='_count', op=operator.eq):
+
+        def do_unpack ():
+            for (ref, value) in result.items():
+                row = dict(ref)
+                row[new_key] = value
+                yield row
+            
+        result = dict()
+        for row in self.source:
+            ref = []
+            for key in keys:
+                ref.append((key, row.get(key),))
+            ref = tuple(ref)
+            if ref in result:
+                result[ref] = result[ref] + 1
+            else:
+                result[ref] = 1
+
+        return Data(do_unpack())
+
+
     def cache (self):
         return Data(list(iter(self)))
 

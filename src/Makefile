@@ -1,13 +1,17 @@
 INPUTS_DIR=../inputs
+TAXONOMIES_DIR=${INPUTS_DIR}/taxonomies
 OUTPUTS_DIR=../outputs
-METADATA=${INPUTS_DIR}/OrganisationRole.json \
-  ${INPUTS_DIR}/OrganisationType.json \
-  ${INPUTS_DIR}/Country.json \
-  ${INPUTS_DIR}/SectorCategory.json \
-  ${INPUTS_DIR}/SectorVocabulary.json
+METADATA=${TAXONOMIES_DIR}/OrganisationRole.json \
+  ${TAXONOMIES_DIR}/OrganisationType.json \
+  ${TAXONOMIES_DIR}/Country.json \
+  ${TAXONOMIES_DIR}/SectorCategory.json \
+  ${TAXONOMIES_DIR}/SectorVocabulary.json \
+  ${TAXONOMIES_DIR}/SectorVocabulary.json \
+  ${TAXONOMIES_DIR}/UNSDG-Goals.json \
+  ${TAXONOMIES_DIR}/UNSDG-Targets.json \
+  ${TAXONOMIES_DIR}/Humanitarian-Clusters.json
 
-
-all: show-org
+all: run-app
 
 run-app:
 	. .venv/bin/activate && python -m flask --app aid_directory --debug run
@@ -15,9 +19,6 @@ run-app:
 relationships: ${OUTPUTS_DIR}/relationships.csv
 
 orgs: ${OUTPUTS_DIR}/orgs.csv
-
-show-org: venv
-	. .venv/bin/activate && python show-org.py
 
 venv: .venv/bin/activate
 

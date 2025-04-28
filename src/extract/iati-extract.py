@@ -26,7 +26,7 @@ def get_codelist (name):
 
     if not name in CODELISTS:
         codelist = dict()
-        path = "../inputs/{}.json".format(name)
+        path = "../inputs/taxonomies/{}.json".format(name)
         with open(path, 'r') as input:
             data = json.load(input)
             for item in data['data']:
@@ -100,17 +100,29 @@ def show_org (output, org, activity, country, sector, default_role='', relations
     if not country_name:
         country_name = get_codelist('Country').get(country.code, '')
 
-    # if the sector vocabulary is DAC, roll up to 3-digit category codes
     sector_code = sector.code
-    sector_vocabulary = sector.vocabulary
-    if sector_vocabulary == '1':
-        sector_vocabulary = '2'
-        sector_code = sector_code[:3]
-
-    # fill in the sector name from default codelist if not supplied
     sector_name = str(sector.narrative)
-    if not sector_name and sector.vocabulary == '1':
-        sector_name = get_codelist('SectorCategory').get(sector_code, '')
+    sector_type_code = str(sector.vocabulary)
+
+    # Normalise DAC purpose codes (roll up to 3-character categories)
+    if sector_type_code in ('1', '2',):
+        sector_type_code = '2'
+        sector_code = sector_code[:3]
+        sector_name = get_codelist('SectorCategory').get(sector_code, sector_name)
+
+    # Normalise SDG Goals
+    elif sector_type_code == '7':
+        sector_name = get_codelist('UNSDG-Goals').get(sector_code, sector_name)
+
+    # Normalise SDG Targets
+    elif sector_type_code == '8':
+        sector_name = get_codelist('UNSDG-Targets').get(sector_code, sector_name)
+
+    # Normalise Humanitarian Clusters
+    elif sector_type_code == '10':
+        sector_name = get_codelist('Humanitarian-Clusters').get(sector_code, sector_name)
+        
+    sector_type = get_codelist('SectorVocabulary').get(sector_type_code, '(Unknown sector type)')
 
     # write a row of CSV data
     output.writerow([
@@ -125,8 +137,8 @@ def show_org (output, org, activity, country, sector, default_role='', relations
         country.code,
         sector_name,
         sector_code,
-        get_codelist('SectorVocabulary').get(sector_vocabulary, ''),
-        sector.vocabulary,
+        sector_type,
+        sector_type_code,
         get_codelist('OrganisationRole').get(org.role, '') if org.role else default_role,
         relationship_index,
     ])

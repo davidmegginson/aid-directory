@@ -6,13 +6,28 @@
   <body>
     <h1>Sectors</h1>
 
-    {% for type in sectors.unique('sector_type') %}
+    {% set types = sectors.unique(['sector_type', 'sector_type_code']).cache() | sort(attribute='sector_type_code') %}
+
     <section>
-      <h2>{{ type }}</h2>
+      <h2>Sector vocabularies</h2>
+      <ul>
+        {% for type in types %}
+        <li>
+          {{ type.sector_type_code }}. <a href="#{{ type.sector_type_code }}">{{ type.sector_type }}</a>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    {% for type in types %}
+    <section id="{{ type.sector_type_code }}">
+      <h2>{{ type.sector_type_code }}. {{ type.sector_type }}</h2>
     
       <ul>
-        {% for sector in sectors.has('sector_type', type) %}
+        {% for sector in sectors.has('sector_type_code', type.sector_type_code) | sort (attribute='sector_code') %}
+        {% if sector.sector_name %}
         <li>{% include "includes/sector.html" %}</li>
+        {% endif %}
         {% endfor %}
       </ul>
 

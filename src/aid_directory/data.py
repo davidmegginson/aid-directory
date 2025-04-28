@@ -36,7 +36,7 @@ def get_org (org_id):
 
     org['countries'] = data.unique(('country_name', 'country_code',))
 
-    org['sectors'] = data.unique(['sector_name', 'sector_code', 'sector_type', 'sector_type_code'])
+    org['sectors'] = data.unique(['sector_name', 'sector_code', 'sector_type', 'sector_type_code']).cache()
     org['roles'] = data.unique('org_role')
     org['activities'] = activity_data
     org['partners'] = activity_data.has('org_id', org_id, negate=True).unique(('org_name', 'org_id', 'org_type', 'org_role',)).cache()

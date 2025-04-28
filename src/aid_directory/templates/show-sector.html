@@ -40,8 +40,10 @@
         <h3>{{ role }}</h3>
 
         <ul>
-          {% for org in sector.orgs.has('org_role', role) %}
+          {% for org in sector.orgs.has('org_role', role) | sort(attribute='org_name') %}
+          {% if org.org_name %}
           <li>{% include "includes/org.html" %}</li>
+          {% endif %}
           {% endfor %}
         </ul>
 
