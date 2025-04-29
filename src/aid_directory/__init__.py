@@ -4,9 +4,13 @@ from .data import *
 
 app = Flask(__name__)
 
+@app.route("/")
+def show_home():
+    return render_template('show-home.html')
+
 @app.route("/orgs/")
-def show_orgs():
-    orgs = sorted(data.get_orgs(), key=lambda x: x['org_name'])
+def list_orgs():
+    orgs = data.get_orgs()
     return render_template('list-orgs.html', orgs=orgs)
 
 @app.route("/orgs/<org_id>/")
@@ -15,7 +19,7 @@ def show_org(org_id):
     return render_template('show-org.html', org=org)
 
 @app.route("/sectors/")
-def show_sectors():
+def list_sectors():
     sectors = data.get_sectors()
     return render_template('list-sectors.html', sectors=sectors)
 

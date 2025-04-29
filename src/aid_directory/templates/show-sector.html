@@ -6,52 +6,57 @@
   <body>
     <header>
       <nav>
+        <a href="/">Home</a>
         <a href="/sectors/">Sectors</a>
       </nav>
       <h1>Sector: {{ sector.name }}</h1>
     </header>
 
-    <p>
-      Sector type:
-      {{ sector.type }}
-    </p>
+    <main>
 
-    <p>
-      Sector code:
-      {{ sector.code }}
-    </p>
+      <p>
+        Sector type:
+        {{ sector.type }}
+      </p>
 
-    <p>
-      Aliases:
-    </p>
+      <p>
+        Sector code:
+        {{ sector.code }}
+      </p>
 
-    <ul>
-      {% for alias in sector.aliases | sort %}
-      <li>{{ alias }}</li>
-      {% endfor %}
-    </ul>
+      <p>
+        Aliases:
+      </p>
 
-    <section id="orgs">
-      <h2>Organisations</h2>
+      <ul>
+        {% for alias in sector.aliases | sort %}
+        <li>{{ alias }}</li>
+        {% endfor %}
+      </ul>
 
-      {% for role in sector.orgs.unique('org_role') | sort %}
+      <section id="orgs">
+        <h2>Organisations</h2>
 
-      <section>
-        <h3>{{ role }}</h3>
+        {% for role in sector.orgs.unique('org_role') | sort %}
 
-        <ul>
-          {% for org in sector.orgs.has('org_role', role) | sort(attribute='org_name') %}
-          {% if org.org_name %}
-          <li>{% include "includes/org.html" %}</li>
-          {% endif %}
-          {% endfor %}
-        </ul>
+        <section>
+          <h3>{{ role }}</h3>
 
+          <ul>
+            {% for org in sector.orgs.has('org_role', role) | sort(attribute='org_name') %}
+            {% if org.org_name %}
+            <li>{% include "includes/org.html" %}</li>
+            {% endif %}
+            {% endfor %}
+          </ul>
+
+        </section>
+
+        {% endfor %}
+        
       </section>
 
-      {% endfor %}
-      
-    </section>
+    </main>
 
   </body>
 </html>

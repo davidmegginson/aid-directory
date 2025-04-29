@@ -6,124 +6,129 @@
   <body>
     <header>
       <nav>
+        <a href="/">Home</a>
         <a href="/orgs/">Organisations</a>
       </nav>
       <h1>Organisation: {{ org.name }}</h1>
     </header>
 
-    <p>
-      IATI id:
-      {{ org.id }}
-    </p>
+    <main>
 
-    <p>
-      Aliases:
-    </p>
+      <p>
+        IATI id:
+        {{ org.id }}
+      </p>
 
-    <ul>
-      {% for alias in org.aliases | sort %}
-      {% if alias != org.name %}
-      <li>{{ alias }}</li>
-      {% endif %}
-      {% endfor %}
-    </ul>
+      <p>
+        Aliases:
+      </p>
 
-    <p>
-      Types:
-    </p>
+      <ul>
+        {% for alias in org.aliases | sort %}
+        {% if alias != org.name %}
+        <li>{{ alias }}</li>
+        {% endif %}
+        {% endfor %}
+      </ul>
 
-    <ul>
-      {% for type in org.types | sort %}
-      <li>{{ type }}</li>
-      {% endfor %}
-    </ul>
-    
-    <p>
-      Roles:
-    </p>
+      <p>
+        Types:
+      </p>
 
-    <ul>
-      {% for role in org.roles | sort %}
-      <li>{{ role }}</li>
-      {% endfor %}
-    </ul>
+      <ul>
+        {% for type in org.types | sort %}
+        <li>{{ type }}</li>
+        {% endfor %}
+      </ul>
+      
+      <p>
+        Roles:
+      </p>
 
-    <section id="sectors">
-      <h2>Sectors</h2>
+      <ul>
+        {% for role in org.roles | sort %}
+        <li>{{ role }}</li>
+        {% endfor %}
+      </ul>
 
-      {% set sector_types = org.sectors.unique(['sector_type', 'sector_type_code']).cache() | sort(attribute='sector_type_code') %}
+      <section id="sectors">
+        <h2>Sectors</h2>
 
-      {% for type in sector_types %}
-      <section id="sectors.{{ type.sector_type_code }}">
-        <h3>{{ type.sector_type }}</h3>
-        <ul>
-          {% for sector in org.sectors.has('sector_type_code', type.sector_type_code) | sort(attribute='sector_code') %}
-          {% if sector.sector_type_code in ['98', '99'] %}
-          <li>
-            {{ sector.sector_code }}.
-            <a href="/sectors/{{ sector.sector_type_code }}/{{ org.id }}/{{ sector.sector_code }}/">{{ sector.sector_name }}</a>
-          </li>
+        {% set sector_types = org.sectors.unique(['sector_type', 'sector_type_code']).cache() | sort(attribute='sector_type_code') %}
+
+        {% for type in sector_types %}
+        <section id="sectors.{{ type.sector_type_code }}">
+          <h3>{{ type.sector_type }}</h3>
+          <ul>
+            {% for sector in org.sectors.has('sector_type_code', type.sector_type_code) | sort(attribute='sector_code') %}
+            {% if sector.sector_type_code in ['98', '99'] %}
+            <li>
+              {{ sector.sector_code }}.
+              <a href="/sectors/{{ sector.sector_type_code }}/{{ org.id }}/{{ sector.sector_code }}/">{{ sector.sector_name }}</a>
+            </li>
+            {% else %}
+            <li>
+              {{ sector.sector_code }}.
+              <a href="/sectors/{{ sector.sector_type_code }}/{{ sector.sector_code }}/">{{ sector.sector_name }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+          </ul>
+        </section>
+        {% endfor %}
+        
+      </section>
+
+
+      <section id="partners">
+        <h2>Partners</h2>
+
+        {% for org_role in org.partners.unique('org_role') | sort %}
+        <section>
+          <h3>{{ org_role }}</h3>
+          <ul>
+            {% for partner in org.partners.has('org_role', org_role) %}
+            {% with org=partner %}
+            <li>{% include "includes/org.html" %}</li>
+            {% endwith %}
+            {% endfor %}
+          </ul>
+        </section>
+        {% endfor %}
+
+      </section>
+
+      <section id="relationships">
+        <h2>Direct funding relationships</h2>
+
+        <section id="providers">
+          <h3>Funding providers</h3>
+          {% if org.providers %}
+          <ul>
+            {% for relationship in org.providers %}
+            <li><a href="/orgs/{{ relationship.provider_org_id }}/">{{ relationship.provider_org_name }}</a></li>
+            {% endfor %}
+          </ul>
           {% else %}
-          <li>
-            {{ sector.sector_code }}.
-            <a href="/sectors/{{ sector.sector_type_code }}/{{ sector.sector_code }}/">{{ sector.sector_name }}</a>
-          </li>
+          <p><i>None known</i></p>
           {% endif %}
-          {% endfor %}
-        </ul>
+        </section>
+        
+        <section id="recipients">
+          <h3>Funding recipients</h3>
+          {% if org.recipients %}
+          <ul>
+            {% for relationship in org.recipients %}
+            <li><a href="/orgs/{{ relationship.provider_org_id }}/">{{ relationship.provider_org_name }}</a></li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p><i>None known</i></p>
+          {% endif %}
+        </section>
+        
       </section>
-      {% endfor %}
-      
-    </section>
 
-
-    <section id="partners">
-      <h2>Partners</h2>
-
-      {% for org_role in org.partners.unique('org_role') | sort %}
-      <section>
-        <h3>{{ org_role }}</h3>
-        <ul>
-          {% for partner in org.partners.has('org_role', org_role) %}
-          {% with org=partner %}
-          <li>{% include "includes/org.html" %}</li>
-          {% endwith %}
-          {% endfor %}
-        </ul>
-      </section>
-      {% endfor %}
-
-    </section>
-
-    <section id="relationships">
-      <h2>Direct funding relationships</h2>
-
-      <section id="providers">
-        <h3>Funding providers</h3>
-        {% if org.providers %}
-        <ul>
-          {% for relationship in org.providers %}
-          <li><a href="/orgs/{{ relationship.provider_org_id }}/">{{ relationship.provider_org_name }}</a></li>
-          {% endfor %}
-        </ul>
-        {% else %}
-        <p><i>None known</i></p>
-        {% endif %}
-      </section>
-      
-      <section id="recipients">
-        <h3>Funding recipients</h3>
-        {% if org.recipients %}
-        <ul>
-          {% for relationship in org.recipients %}
-          <li><a href="/orgs/{{ relationship.provider_org_id }}/">{{ relationship.provider_org_name }}</a></li>
-          {% endfor %}
-        </ul>
-        {% else %}
-        <p><i>None known</i></p>
-        {% endif %}
-      </section>
-      
-    </section>
+    </main>
   </body>
 </html>

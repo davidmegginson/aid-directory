@@ -1,19 +1,64 @@
 {
-    "data": {
-        "SHL": "Emergency Shelter and NFI",
-        "CCM": "Camp Coordination / Management",
-        "PRO-MIN": "Mine Action",
-        "FSC": "Food Security",
-        "WSH": "Water Sanitation Hygiene",
-        "LOG": "Logistics",
-        "PRO-CPN": "Child Protection",
-        "PRO": "Protection",
-        "EDU": "Education",
-        "NUT": "Nutrition",
-        "HEA": "Health",
-        "ERY": "Early Recovery",
-        "TEL": "Emergency Telecommunications",
-        "PRO-GBV": "Gender Based Violence",
-        "PRO-HLP": "Housing, Land and Property"
+  "data": [
+    {
+      "code": "SHL",
+      "name": "Emergency Shelter and NFI"
+    },
+    {
+      "code": "CCM",
+      "name": "Camp Coordination / Management"
+    },
+    {
+      "code": "PRO-MIN",
+      "name": "Mine Action"
+    },
+    {
+      "code": "FSC",
+      "name": "Food Security"
+    },
+    {
+      "code": "WSH",
+      "name": "Water Sanitation Hygiene"
+    },
+    {
+      "code": "LOG",
+      "name": "Logistics"
+    },
+    {
+      "code": "PRO-CPN",
+      "name": "Child Protection"
+    },
+    {
+      "code": "PRO",
+      "name": "Protection"
+    },
+    {
+      "code": "EDU",
+      "name": "Education"
+    },
+    {
+      "code": "NUT",
+      "name": "Nutrition"
+    },
+    {
+      "code": "HEA",
+      "name": "Health"
+    },
+    {
+      "code": "ERY",
+      "name": "Early Recovery"
+    },
+    {
+      "code": "TEL",
+      "name": "Emergency Telecommunications"
+    },
+    {
+      "code": "PRO-GBV",
+      "name": "Gender Based Violence"
+    },
+    {
+      "code": "PRO-HLP",
+      "name": "Housing, Land and Property"
     }
+  ]
 }

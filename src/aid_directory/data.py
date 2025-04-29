@@ -10,7 +10,7 @@ relationships_file = os.path.join(package_directory, '../../outputs/relationship
 
 def get_orgs ():
 
-    return Data(read_csv(org_file)).unique(('org_name', 'org_id', 'org_type'))
+    return Data(read_csv(org_file)).unique(('org_name', 'org_id', 'org_type', 'org_type_code')).cache()
     
 
 def get_org (org_id):

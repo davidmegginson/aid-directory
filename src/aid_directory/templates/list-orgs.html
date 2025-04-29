@@ -4,11 +4,45 @@
     <title>Organisations</title>
   </head>
   <body>
-    <h1>Organisations</h1>
-    <ul>
-      {% for org in orgs %}
-      <li>{% include "includes/org.html" %}</li>
+    <head>
+      <nav class="breadcrumbs">
+        <a href="/">Home</a>
+      </nav>
+      <h1>Organisations</h1>
+    </head>
+    <main>
+      {% set types = orgs.unique(['org_type', 'org_type_code']).cache() | sort(attribute='org_type_code') %}
+
+      <section>
+        <h2>Organisation types</h2>
+        <ul>
+          {% for type in types %}
+          <li>
+            {% if type.org_type_code %}
+            {{ type.org_type_code }}.
+            {% endif %}
+            <a href="#{{ type.org_type_code or '_unspecified' }}">{{ type.org_type or '(Unspecified type)' }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      {% for type in types %}
+      <section id="{{ type.org_type_code or '_unspecified' }}">
+        <h2>
+          {% if type.org_type_code %}
+          {{ type.org_type_code }}.
+          {% endif %}
+          {{ type.org_type or "(Unspecified type)" }}
+        </h2>
+        <ul>
+          {% for org in orgs.has('org_type_code', type.org_type_code) | sort(attribute="org_name") %}
+          <li>{% include "includes/org.html" %}</li>
+          {% endfor %}
+        </ul>
+      </section>
       {% endfor %}
-    </ul>
+
+    </main>
   </body>
 </html>
