@@ -1,7 +1,9 @@
 <span>
-  {% if org.org_id %}
+  {% if org.org_name and org.org_id %}
   <a href="/orgs/{{ org.org_id }}/">{{ org.org_name }}</a>
-  {% else %}
+  {% elif org.org_name %}
   {{ org.org_name }}
+  {% elif org.org_id %}
+  <a href="/orgs/{{ org.org_id }}/">{{ org.org_id }}</a>
   {% endif %}
 </span>

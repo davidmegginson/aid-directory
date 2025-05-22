@@ -4,7 +4,7 @@ from .pipeline import *
 
 package_directory = os.path.dirname(os.path.abspath(__file__))
 
-org_file = os.path.join(package_directory, '../../outputs/orgs.csv')
+org_file = os.path.join(package_directory, '../../outputs/orgs-norm.csv')
 relationships_file = os.path.join(package_directory, '../../outputs/relationships.csv')
 
 
@@ -22,9 +22,16 @@ def get_org (org_id):
     org['id'] = org_id
     org['name'] = next(iter(data)).get('org_name')
 
-    org['types'] = data.unique('org_type')
+    org['types'] = data.unique('org_type_orig')
+    org['types'].discard('')
 
-    org['aliases'] = data.unique('org_name')
+    org['aliases'] = data.unique('org_name_orig')
+    org['aliases'].discard('')
+    org['aliases'].discard(org['name'])
+
+    org['alternative_ids'] = data.unique('org_id_orig')
+    org['alternative_ids'].discard('')
+    org['alternative_ids'].discard(org['id'])
 
     org['receivers'] = Data(read_csv(relationships_file)).has('provider_org_code', org_id).cache()
     org['providers'] = Data(read_csv(relationships_file)).has('receiver_org_code', org_id).cache()
@@ -32,7 +39,7 @@ def get_org (org_id):
     org['activities'] = data.unique(['activity_title', 'activity_id'])
 
     # operator.contains is in the wrong order :(
-    activity_data = Data(read_csv('../outputs/orgs.csv')).has('activity_id', org['activities'].unique('activity_id'), lambda x, y: x in y).cache()
+    activity_data = Data(read_csv('../outputs/orgs-norm.csv')).has('activity_id', org['activities'].unique('activity_id'), lambda x, y: x in y).cache()
 
     org['countries'] = data.unique(('country_name', 'country_code',))
 
