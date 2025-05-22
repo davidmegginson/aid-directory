@@ -18,7 +18,7 @@
         <ul>
           {% for type in types %}
           <li>
-            {% if type.org_type_code %}
+            {% if type.org_type_code != '' %}
             {{ type.org_type_code }}.
             {% endif %}
             <a href="#{{ type.org_type_code or '_unspecified' }}">{{ type.org_type or '(Unspecified type)' }}</a>
@@ -30,7 +30,7 @@
       {% for type in types %}
       <section id="{{ type.org_type_code or '_unspecified' }}">
         <h2>
-          {% if type.org_type_code %}
+          {% if type.org_type_code != ''%}
           {{ type.org_type_code }}.
           {% endif %}
           {{ type.org_type or "(Unspecified type)" }}

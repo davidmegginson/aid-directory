@@ -1,0 +1,18 @@
+services:
+
+  aid-directory-db:
+    build: ./aid-directory-db
+    ports:
+      - 127.0.0.1:33062:3306
+    volumes:
+      - ${AID_DIRECTORY_DATA:-/var/data/aid-directory/}:/var/lib/mysql/:rw
+    env_file:
+      aid-directory-db.env
+    command: >
+      --slow-query-log-file=/dev/stdout
+      --innodb-buffer-pool-size=${INNODB_POOL_SIZE:-32Gb}
+      --innodb-buffer-pool-instances=${INNODB_POOL_INSTANCES:-8}
+      --innodb-thread-concurrency=0
+      --innodb-file-per-table=1
+    restart: always
+      

@@ -15,24 +15,42 @@
     <main>
 
       <p>
-        IATI id:
+        <b>IATI id:</b>
         {{ org.id }}
       </p>
 
       <p>
-        Aliases:
+        <b>Aliases:</b>
       </p>
 
+      {% if org.aliases|length > 0 %}
       <ul>
         {% for alias in org.aliases | sort %}
-        {% if alias != org.name %}
         <li>{{ alias }}</li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p><i>None found.</i></p>
+      {% endif %}
+
+      <p>
+        <b>Alternative identifiers:</b>
+      </p>
+
+      {% if org.alternative_ids|length > 0 %}
+      <ul>
+        {% for id in org.alternative_ids | sort %}
+        {% if id and id != org.id %}
+        <li>{{ id }}</li>
         {% endif %}
         {% endfor %}
       </ul>
+      {% else %}
+      <p><i>None found.</i></p>
+      {% endif %}
 
       <p>
-        Types:
+        <b>Types:</b>
       </p>
 
       <ul>
@@ -42,7 +60,7 @@
       </ul>
       
       <p>
-        Roles:
+        <b>Roles:</b>
       </p>
 
       <ul>
