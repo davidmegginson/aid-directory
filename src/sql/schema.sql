@@ -1,5 +1,7 @@
 DROP VIEW IF EXISTS ActivityView;
-DROP VIEW IF EXISTS SourceView;
+DROP VIEW IF EXISTS SectorView;
+DROP VIEW IF EXISTS OrgInstanceView;
+DROP VIEW IF EXISTS OrgActivityView;
 
 DROP TABLE IF EXISTS OrgActivities;
 DROP TABLE IF EXISTS OrgInstances;
@@ -23,7 +25,7 @@ CREATE TABLE Activities (
   id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
   source_ref INT NOT NULL,
   code VARCHAR(512) UNIQUE NOT NULL,
-  name VARCHAR(2048) NOT NULL,
+  name TEXT NOT NULL,
   is_humanitarian BOOL DEFAULT FALSE,
   UNIQUE(source_ref, code),
   FOREIGN KEY (source_ref) REFERENCES Sources(id)
@@ -76,29 +78,31 @@ CREATE TABLE OrgInstances (
   code VARCHAR(128),
   type INT NOT NULL,
   name VARCHAR(256) NOT NULL,
-  org_ref INT,
   UNIQUE(code, type, name),
-  FOREIGN KEY (type) REFERENCES OrgTypes(id),
-  FOREIGN KEY (org_ref) REFERENCES Orgs(id)
+  FOREIGN KEY (type) REFERENCES OrgTypes(id)
 );
 
 CREATE TABLE OrgActivities (
+  id INT PRIMARY KEY AUTO_INCREMENT,
   activity_ref INT NOT NULL,
-  org_variant_ref INT NOT NULL,
+  org_instance_ref INT NOT NULL,
   sector_ref INT NOT NULL,
   country_ref INT NOT NULL,
   org_role_ref INT NOT NULL,
+  org_ref INT,
   relationship_index INT,
-  UNIQUE(activity_ref, org_variant_ref, sector_ref, country_ref, org_role_ref, relationship_index),
+  UNIQUE(activity_ref, org_instance_ref, sector_ref, country_ref, org_role_ref, relationship_index),
   FOREIGN KEY (activity_ref) REFERENCES Activities(id)
     ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (org_variant_ref) REFERENCES OrgInstances(id)
+  FOREIGN KEY (org_instance_ref) REFERENCES OrgInstances(id)
     ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (sector_ref) REFERENCES Sectors(id)
     ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (country_ref) REFERENCES Countries(id)
     ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (org_role_ref) REFERENCES OrgRoles(id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (org_ref) REFERENCES Orgs(id)
     ON DELETE CASCADE ON UPDATE CASCADE
 );
 
