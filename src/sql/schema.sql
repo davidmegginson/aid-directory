@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS OrgActivities;
-DROP TABLE IF EXISTS OrgVariants;
+DROP TABLE IF EXISTS OrgInstances;
 DROP TABLE IF EXISTS Orgs;
 DROP TABLE IF EXISTS OrgTypes;
 DROP TABLE IF EXISTS Sources;
@@ -24,9 +24,10 @@ CREATE TABLE SectorVocabularies (
 
 CREATE TABLE Sectors (
   id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-  code VARCHAR(256) UNIQUE NOT NULL,
+  code VARCHAR(256) NOT NULL,
   vocabulary_ref INT NOT NULL,
   name VARCHAR(512) NOT NULL,
+  UNIQUE(code, vocabulary_ref),
   FOREIGN KEY (vocabulary_ref) REFERENCES SectorVocabularies(id)
 );
 
@@ -51,7 +52,7 @@ CREATE TABLE Sources (
 CREATE TABLE OrgTypes (
   id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
   code VARCHAR(8) UNIQUE NOT NULL,
-  name VARCHAR(32) NOT NULL
+  name VARCHAR(128) NOT NULL
 );
 
 CREATE TABLE Orgs (
@@ -62,7 +63,7 @@ CREATE TABLE Orgs (
   FOREIGN KEY (type) REFERENCES OrgTypes(id)
 );
 
-CREATE TABLE OrgVariants (
+CREATE TABLE OrgInstances (
   id int PRIMARY KEY NOT NULL AUTO_INCREMENT,
   code VARCHAR(512) UNIQUE NOT NULL,
   type INT NOT NULL,
@@ -83,7 +84,7 @@ CREATE TABLE OrgActivities (
   UNIQUE(activity_ref, org_variant_ref, sector_ref, country_ref, role_ref, source_ref, relationship_index),
   FOREIGN KEY (activity_ref) REFERENCES Activities(id)
     ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (org_variant_ref) REFERENCES OrgVariants(id)
+  FOREIGN KEY (org_variant_ref) REFERENCES OrgInstances(id)
     ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (sector_ref) REFERENCES Sectors(id)
     ON DELETE CASCADE ON UPDATE CASCADE,
