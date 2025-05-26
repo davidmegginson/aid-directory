@@ -10,89 +10,89 @@ db = mysql.connector.connect (
     port=CONFIG.get('database_port', '3306'),
 )
 
-CODE_TABLES = (
-    'OrgTypes',
-    'Countries',
-    'Roles',
-    'SectorVocabularies',
-)
-
-def get_coded (table, code, name):
-    """ Look up a coded metadata item, creating it if necessary """
-
-    # security check
-    if not table in CODE_TABLES:
-        raise Exception("Unknown code table {}".format(table))
-
-    # cache key
-    key = (table, code,)
-
-    # database lookup if not in cache
-    if not key in get_coded.cache:
+def get_cached (table_name, select_query, select_params, create_query, create_params):
+    """ Get a row from database, using a cached version if available """
+    cache_key = (table_name,) + select_params
+    if not cache_key in get_cached.cache:
         cursor = db.cursor(dictionary=True)
-        cursor.execute(
-            "SELECT * FROM {} WHERE code=%s".format(table),
-            (code,)
-        )
-        get_coded.cache[key] = cursor.fetchone()
+        cursor.execute(select_query, select_params)
+        get_cached.cache[cache_key] = cursor.fetchone()
+        if get_cached.cache[cache_key] is None:
+            cursor.execute(create_query, create_params)
+            cursor.execute("SELECT * FROM {} WHERE id=last_insert_id()".format(table_name))
+            get_cached.cache[cache_key] = cursor.fetchone()
 
-        # create if not in database
-        if get_coded.cache[key] is None:
-            cursor.execute(
-                "INSERT INTO {} (code, name) VALUES (%s, %s)".format(table),
-                (code, name),
-            )
-            cursor.execute(
-                "SELECT * FROM {} WHERE id=last_insert_id()".format(table)
-            )
-            get_coded.cache[key] = cursor.fetchone()
+    return get_cached.cache[cache_key]
 
-    return get_coded.cache[key]
+get_cached.cache = dict()
 
 
-get_coded.cache = dict()
+def get_org_type (row):
+    return get_cached(
+        'OrgTypes',
+        'SELECT * FROM OrgTypes WHERE code=%s',
+        (row['org_type_code'],),
+        'INSERT INTO OrgTypes (code, name) VALUES (%s, %s)',
+        (row['org_type_code'], row['org_type']),
+    )
 
 
-def get_sector (sector_code, sector_name, sector_type_code, sector_type):
-
-    key = (sector_code, str(sector_type_code),)
-
-    if not key in get_sector.cache:
-
-        # make sure we have the vocabulary
-        sector_vocabulary = get_coded('SectorVocabularies', sector_type_code, sector_type)
-        print(sector_vocabulary)
-        
-        cursor = db.cursor(dictionary=True)
-        cursor.execute(
-            "SELECT * FROM Sectors WHERE code=%s and vocabulary_ref=%s",
-            (sector_code, sector_vocabulary['id'],)
-        )
-        get_sector.cache[key] = cursor.fetchone()
-        if get_sector.cache[key] is None:
-            cursor.execute(
-                "INSERT INTO Sectors (code, name, vocabulary_ref) VALUES (%s, %s, %s)",
-                (sector_code, sector_name, sector_vocabulary['id'],)
-            )
-            cursor.execute(
-                "SELECT * FROM Sectors WHERE id=last_insert_id()"
-            )
-            get_sector.cache[key] = cursor.fetchone()
-
-    return get_sector.cache[key]
+def get_org_role (row):
+    return get_cached(
+        'OrgRoles',
+        'SELECT * FROM OrgRoles WHERE code=%s',
+        (row['org_role'],),
+        'INSERT INTO OrgRoles (code, name) VALUES (%s, %s)',
+        (row['org_role'], row['org_role'],)
+    )
 
 
-get_sector.cache = dict()
+def get_country (row):
+    return get_cached(
+        'Countries',
+        'SELECT * FROM Countries WHERE code=%s',
+        (row['country_code'],),
+        'INSERT INTO Countries (code, name) VALUES (%s, %s)',
+        (row['country_code'], row['country_name'],)
+    )
+
+
+def get_source (row):
+    return get_cached(
+        'Sources',
+        'SELECT * FROM Sources where code=%s',
+        (row['source'],),
+        'INSERT INTO Sources (code, name) VALUES (%s, %s)',
+        (row['source'], row['source'],),
+    )
+
+
+def get_activity (row):
+    source = get_source(row)
+    return get_cached(
+        'Activities',
+        'SELECT * FROM Activities WHERE source_ref=%s and code=%s',
+        (source['id'], row['activity_id']),
+        'INSERT INTO Activities (source_ref, code, name, is_humanitarian) VALUES (%s, %s, %s, %s)',
+        (source['id'], row['activity_id'], row['activity_name'], row['is_humanitarian'],)
+    )
+
+
+def get_org_instance (row):
+    org_type = get_org_type(row)
+    return get_cached(
+        'OrgInstances',
+        'SELECT * FROM OrgInstances WHERE (CODE IS NOT NULL AND CODE=%s) OR (CODE IS NULL AND type=%s AND name=%s)',
+        (row['org_id'], org_type['id'], row['org_name'],),
+        'INSERT INTO OrgInstances (code, type, name) VALUES (%s, %s, %s)',
+        (row['org_id'], org_type['id'], row['org_name'],),
+    )
 
 
 def import_data (stream):
     input = csv.DictReader(stream)
     for row in input:
-        org_type = get_coded('OrgTypes', row['org_type_code'], row['org_type'])
-        country = get_coded('Countries', row['country_code'], row['country_name'])
-        role = get_coded('Roles', row['org_role'], row['org_role'])
-        sector = get_sector(row['sector_code'], row['sector_name'], row['sector_type_code'], row['sector_type'])
-        print(org_type, country, role, sector)
+        org_instance = get_org_instance(row)
 
 if __name__ == '__main__':
     with open('../outputs/orgs.csv', 'r') as stream:

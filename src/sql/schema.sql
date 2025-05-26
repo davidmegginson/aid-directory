@@ -1,19 +1,33 @@
+DROP VIEW IF EXISTS ActivityView;
+DROP VIEW IF EXISTS SourceView;
+
 DROP TABLE IF EXISTS OrgActivities;
 DROP TABLE IF EXISTS OrgInstances;
 DROP TABLE IF EXISTS Orgs;
 DROP TABLE IF EXISTS OrgTypes;
-DROP TABLE IF EXISTS Sources;
-DROP TABLE IF EXISTS Roles;
+DROP TABLE IF EXISTS OrgRoles;
 DROP TABLE IF EXISTS Countries;
 DROP TABLE IF EXISTS Sectors;
 DROP TABLE IF EXISTS SectorVocabularies;
 DROP TABLE IF EXISTS Activities;
+DROP TABLE IF EXISTS Sources;
+
+
+CREATE TABLE Sources (
+  id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  code VARCHAR(16) UNIQUE NOT NULL,
+  name VARCHAR(128) NOT NULL
+);
 
 CREATE TABLE Activities (
   id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  source_ref INT NOT NULL,
   code VARCHAR(512) UNIQUE NOT NULL,
   name VARCHAR(2048) NOT NULL,
-  is_humanitarian BOOL DEFAULT FALSE
+  is_humanitarian BOOL DEFAULT FALSE,
+  UNIQUE(source_ref, code),
+  FOREIGN KEY (source_ref) REFERENCES Sources(id)
+    ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE SectorVocabularies (
@@ -37,13 +51,7 @@ CREATE TABLE Countries (
   name VARCHAR(256) NOT NULL
 );
 
-CREATE TABLE Roles (
-  id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-  code VARCHAR(16) UNIQUE NOT NULL,
-  name VARCHAR(128) NOT NULL
-);
-
-CREATE TABLE Sources (
+CREATE TABLE OrgRoles (
   id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
   code VARCHAR(16) UNIQUE NOT NULL,
   name VARCHAR(128) NOT NULL
@@ -65,10 +73,11 @@ CREATE TABLE Orgs (
 
 CREATE TABLE OrgInstances (
   id int PRIMARY KEY NOT NULL AUTO_INCREMENT,
-  code VARCHAR(512) UNIQUE NOT NULL,
+  code VARCHAR(128),
   type INT NOT NULL,
-  name VARCHAR(1024) NOT NULL,
+  name VARCHAR(256) NOT NULL,
   org_ref INT,
+  UNIQUE(code, type, name),
   FOREIGN KEY (type) REFERENCES OrgTypes(id),
   FOREIGN KEY (org_ref) REFERENCES Orgs(id)
 );
@@ -78,10 +87,9 @@ CREATE TABLE OrgActivities (
   org_variant_ref INT NOT NULL,
   sector_ref INT NOT NULL,
   country_ref INT NOT NULL,
-  role_ref INT NOT NULL,
-  source_ref INT NOT NULL,
+  org_role_ref INT NOT NULL,
   relationship_index INT,
-  UNIQUE(activity_ref, org_variant_ref, sector_ref, country_ref, role_ref, source_ref, relationship_index),
+  UNIQUE(activity_ref, org_variant_ref, sector_ref, country_ref, org_role_ref, relationship_index),
   FOREIGN KEY (activity_ref) REFERENCES Activities(id)
     ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (org_variant_ref) REFERENCES OrgInstances(id)
@@ -90,9 +98,7 @@ CREATE TABLE OrgActivities (
     ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (country_ref) REFERENCES Countries(id)
     ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (role_ref) REFERENCES Roles(id)
-    ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (source_ref) REFERENCES Sources(id)
+  FOREIGN KEY (org_role_ref) REFERENCES OrgRoles(id)
     ON DELETE CASCADE ON UPDATE CASCADE
 );
 
