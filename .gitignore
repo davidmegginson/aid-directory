@@ -4,5 +4,6 @@
 __pycache__
 /data/
 /docker/.env
-/docker/aid-directory.env
+/docker/aid-directory-db.env
+/docker/aid-directory-web.env
 config.json
