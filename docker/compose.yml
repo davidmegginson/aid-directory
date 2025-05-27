@@ -14,6 +14,7 @@ services:
       --innodb-buffer-pool-instances=${INNODB_POOL_INSTANCES:-8}
       --innodb-thread-concurrency=0
       --innodb-file-per-table=1
+    restart: always
       
   aid-directory-web:
     build: ./aid-directory-web
@@ -23,3 +24,4 @@ services:
       - ../src:/app
     env_file:
       aid-directory-web.env
+    restart: always
