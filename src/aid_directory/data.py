@@ -1,4 +1,6 @@
-import os
+from . import app
+
+import mysql.connector, os
 
 from .pipeline import *
 
@@ -7,46 +9,62 @@ package_directory = os.path.dirname(os.path.abspath(__file__))
 org_file = os.path.join(package_directory, '../../outputs/orgs-norm.csv')
 relationships_file = os.path.join(package_directory, '../../outputs/relationships.csv')
 
+def get_db ():
+    if get_db.db is None:
+        get_db.db = mysql.connector.connect(
+            database='aid_directory',
+            host='aid-directory-db',
+            port='3306',
+            user='root',
+            password='dyhtt',
+        )
+    return get_db.db;
+
+get_db.db = None
+
+def get_cursor ():
+    if get_cursor.cursor is None:
+        get_cursor.cursor = get_db().cursor(dictionary=True)
+    return get_cursor.cursor
+
+get_cursor.cursor = None
 
 def get_orgs ():
-
-    return Data(read_csv(org_file)).unique(('org_name', 'org_id', 'org_type', 'org_type_code')).cache()
+    get_cursor().execute("SELECT DISTINCT org_name, org_code, org_type_name, org_type_code FROM OrgActivityView")
+    return Data(get_cursor().fetchall());
     
-
-def get_org (org_id):
+def get_org (org_code):
 
     org = dict()
 
-    data = Data(read_csv(org_file)).has('org_id', org_id).cache()
+    get_cursor().execute("SELECT * FROM OrgActivityView WHERE org_code=%s", (org_code,))
+    data = Data(get_cursor().fetchall());
 
-    org['id'] = org_id
+    org['code'] = org_code
     org['name'] = next(iter(data)).get('org_name')
 
-    org['types'] = data.unique('org_type_orig')
+    org['types'] = data.unique('org_type_name')
     org['types'].discard('')
 
-    org['aliases'] = data.unique('org_name_orig')
+    org['aliases'] = data.unique('org_name')
     org['aliases'].discard('')
     org['aliases'].discard(org['name'])
 
-    org['alternative_ids'] = data.unique('org_id_orig')
-    org['alternative_ids'].discard('')
-    org['alternative_ids'].discard(org['id'])
-
-    org['receivers'] = Data(read_csv(relationships_file)).has('provider_org_code', org_id).cache()
-    org['providers'] = Data(read_csv(relationships_file)).has('receiver_org_code', org_id).cache()
-
-    org['activities'] = data.unique(['activity_title', 'activity_id'])
+    org['activities'] = data.unique(['activity_title', 'activity_code'])
 
     # operator.contains is in the wrong order :(
-    activity_data = Data(read_csv('../outputs/orgs-norm.csv')).has('activity_id', org['activities'].unique('activity_id'), lambda x, y: x in y).cache()
+    get_cursor().execute(
+        "SELECT * FROM OrgActivityView WHERE activity_code IN (SELECT activity_code FROM OrgActivityView WHERE org_code=%s)",
+        (org_code,)
+    )
+    activity_data = Data(get_cursor().fetchall())
 
     org['countries'] = data.unique(('country_name', 'country_code',))
 
-    org['sectors'] = data.unique(['sector_name', 'sector_code', 'sector_type', 'sector_type_code']).cache()
-    org['roles'] = data.unique('org_role')
+    org['sectors'] = data.unique(['sector_name', 'sector_code', 'sector_vocabulary_name', 'sector_vocabulary_code']).cache()
+    org['roles'] = data.unique('org_role_name')
     org['activities'] = activity_data
-    org['partners'] = activity_data.has('org_id', org_id, negate=True).unique(('org_name', 'org_id', 'org_type', 'org_role',)).cache()
+    org['partners'] = activity_data.has('org_code', org_code, negate=True).unique(('org_name', 'org_id', 'org_type', 'org_role',)).cache()
 
     return org
 

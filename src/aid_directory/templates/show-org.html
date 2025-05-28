@@ -16,7 +16,7 @@
 
       <p>
         <b>IATI id:</b>
-        {{ org.id }}
+        {{ org.code }}
       </p>
 
       <p>
@@ -72,22 +72,22 @@
       <section id="sectors">
         <h2>Sectors</h2>
 
-        {% set sector_types = org.sectors.unique(['sector_type', 'sector_type_code']).cache() | sort(attribute='sector_type_code') %}
+        {% set sector_vocabularies = org.sectors.unique(['sector_vocabulary_name', 'sector_vocabulary_code']).cache() | sort(attribute='sector_vocabulary_code') %}
 
-        {% for type in sector_types %}
-        <section id="sectors.{{ type.sector_type_code }}">
-          <h3>{{ type.sector_type }}</h3>
+        {% for type in sector_vocabularies %}
+        <section id="sectors.{{ type.sector_vocabulary_code }}">
+          <h3>{{ type.sector_vocabulary_name }}</h3>
           <ul>
-            {% for sector in org.sectors.has('sector_type_code', type.sector_type_code) | sort(attribute='sector_code') %}
-            {% if sector.sector_type_code in ['98', '99'] %}
+            {% for sector in org.sectors.has('sector_vocabulary_code', type.sector_vocabulary_code) | sort(attribute='sector_code') %}
+            {% if sector.sector_vocabulary_code in ['98', '99'] %}
             <li>
               {{ sector.sector_code }}.
-              <a href="/sectors/{{ sector.sector_type_code }}/{{ org.id }}/{{ sector.sector_code }}/">{{ sector.sector_name }}</a>
+              <a href="/sectors/{{ sector.sector_vocabulary_code }}/{{ org.id }}/{{ sector.sector_code }}/">{{ sector.sector_name }}</a>
             </li>
             {% else %}
             <li>
               {{ sector.sector_code }}.
-              <a href="/sectors/{{ sector.sector_type_code }}/{{ sector.sector_code }}/">{{ sector.sector_name }}</a>
+              <a href="/sectors/{{ sector.sector_vocabulary_code }}/{{ sector.sector_code }}/">{{ sector.sector_name }}</a>
             </li>
             {% endif %}
             {% endfor %}

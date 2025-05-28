@@ -11,7 +11,7 @@
       <h1>Organisations</h1>
     </head>
     <main>
-      {% set types = orgs.unique(['org_type', 'org_type_code']).cache() | sort(attribute='org_type_code') %}
+      {% set types = orgs.unique(['org_type_name', 'org_type_code']).cache() | sort(attribute='org_type_code') %}
 
       <section>
         <h2>Organisation types</h2>
@@ -21,7 +21,7 @@
             {% if type.org_type_code != '' %}
             {{ type.org_type_code }}.
             {% endif %}
-            <a href="#{{ type.org_type_code or '_unspecified' }}">{{ type.org_type or '(Unspecified type)' }}</a>
+            <a href="#{{ type.org_type_code or '_unspecified' }}">{{ type.org_type_name or '(Unspecified type)' }}</a>
           </li>
           {% endfor %}
         </ul>
@@ -33,7 +33,7 @@
           {% if type.org_type_code != ''%}
           {{ type.org_type_code }}.
           {% endif %}
-          {{ type.org_type or "(Unspecified type)" }}
+          {{ type.org_type_name or "(Unspecified type)" }}
         </h2>
         <ul>
           {% for org in orgs.has('org_type_code', type.org_type_code) | sort(attribute="org_name") %}
