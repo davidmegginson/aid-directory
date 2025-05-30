@@ -14,7 +14,7 @@ FROM Sectors S
 JOIN SectorVocabularies V ON S.vocabulary_ref=V.id;
 
 CREATE VIEW OrgInstanceView AS
-SELECT OI.*, OT.code AS org_type_code, OT.name AS org_type_name
+SELECT OI.*, OT.code AS vocabulary_code, OT.name AS vocabulary_name
 FROM OrgInstances OI
 JOIN OrgTypes OT ON OI.type=OT.id;
 

@@ -12,26 +12,26 @@
     </head>
 
     <main>
-      {% set types = sectors.unique(['sector_type', 'sector_type_code']).cache() | sort(attribute='sector_type_code') %}
+      {% set vocabularies = sectors.unique(['vocabulary_name', 'vocabulary_code']).cache() | sort(attribute='vocabulary_code') %}
 
       <section>
         <h2>Sector vocabularies</h2>
         <ul>
-          {% for type in types %}
+          {% for vocabulary in vocabularies %}
           <li>
-            {{ type.sector_type_code }}. <a href="#{{ type.sector_type_code }}">{{ type.sector_type }}</a>
+            {{ vocabulary.vocabulary_code }}. <a href="#{{ vocabulary.vocabulary_code }}">{{ vocabulary.vocabulary_name }}</a>
           </li>
           {% endfor %}
         </ul>
       </section>
 
-      {% for type in types %}
-      <section id="{{ type.sector_type_code }}">
-        <h2>{{ type.sector_type_code }}. {{ type.sector_type }}</h2>
+      {% for vocabulary in vocabularies %}
+      <section id="{{ vocabulary.vocabulary_code }}">
+        <h2>{{ vocabulary.vocabulary_code }}. {{ vocabulary.vocabulary_name }}</h2>
         
         <ul>
-          {% for sector in sectors.has('sector_type_code', type.sector_type_code) | sort (attribute='sector_code') %}
-          {% if sector.sector_name %}
+          {% for sector in sectors.has('vocabulary_code', vocabulary.vocabulary_code) | sort (attribute='code') %}
+          {% if sector.name %}
           <li>{% include "includes/sector.html" %}</li>
           {% endif %}
           {% endfor %}

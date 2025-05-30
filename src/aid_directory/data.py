@@ -12,11 +12,11 @@ relationships_file = os.path.join(package_directory, '../../outputs/relationship
 def get_db ():
     if get_db.db is None:
         get_db.db = mysql.connector.connect(
-            database='aid_directory',
-            host='aid-directory-db',
-            port='3306',
-            user='root',
-            password='dyhtt',
+            database=app.config['MYSQL_DATABASE'],
+            host=app.config['MYSQL_HOST'],
+            port=app.config['MYSQL_PORT'],
+            user=app.config['MYSQL_USERNAME'],
+            password=app.config['MYSQL_PASSWORD'],
         )
     return get_db.db;
 
@@ -30,7 +30,8 @@ def get_cursor ():
 get_cursor.cursor = None
 
 def get_orgs ():
-    get_cursor().execute("SELECT DISTINCT org_name, org_code, org_type_name, org_type_code FROM OrgActivityView")
+    get_cursor().execute("SELECT * FROM OrgInstanceView")
+    #get_cursor().execute("SELECT DISTINCT org_name, org_code, org_type_name, org_type_code FROM OrgActivityView")
     return Data(get_cursor().fetchall());
     
 def get_org (org_code):
@@ -64,7 +65,7 @@ def get_org (org_code):
     org['sectors'] = data.unique(['sector_name', 'sector_code', 'sector_vocabulary_name', 'sector_vocabulary_code']).cache()
     org['roles'] = data.unique('org_role_name')
     org['activities'] = activity_data
-    org['partners'] = activity_data.has('org_code', org_code, negate=True).unique(('org_name', 'org_id', 'org_type', 'org_role',)).cache()
+    org['partners'] = activity_data.has('org_code', org_code, negate=True).unique(('org_name', 'org_code', 'org_type_name', 'org_role',)).cache()
 
     return org
 
@@ -72,27 +73,35 @@ def get_org (org_code):
 
 def get_sectors ():
 
-    # Fixme add reporting org id for 98 and 99 vocabularies
-    return Data(read_csv(org_file)).unique(['sector_name', 'sector_code', 'sector_type', 'sector_type_code']).cache()
-    
+    get_cursor().execute("SELECT * FROM SectorView")
+    return Data(get_cursor().fetchall())
 
 
-def get_sector (sector_type_code, sector_code, org_id=None):
+def get_sector (sector_vocabulary_code, sector_code, org_code=None):
+
+    # FIXME: wrong. Should always use reporting org id
+    if org_code is not None:
+        get_cursor().execute(
+            "SELECT * FROM OrgActivityView WHERE sector_vocabulary_code=%s AND sector_code=%s AND org_code=%s",
+            (sector_vocabulary_code, sector_code, org_code)
+        )
+    else:
+        get_cursor().execute(
+            "SELECT * FROM OrgActivityView WHERE sector_vocabulary_code=%s AND sector_code=%s",
+            (sector_vocabulary_code, sector_code,)
+        )
+
+    data = Data(get_cursor().fetchall())
 
     sector = dict()
 
-    # FIXME: wrong. Should always use reporting org id
-    if org_id is None:
-        data = Data(read_csv(org_file)).has('sector_type_code', sector_type_code).has('sector_code', sector_code).cache()
-    else:
-        data = Data(read_csv(org_file)).has('sector_type_code', sector_type_code).has('sector_code', sector_code).has('org_id', org_id).cache()
-
     sector['name'] = next(iter(data)).get('sector_name')
-    sector['type'] = next(iter(data)).get('sector_type')
     sector['code'] = sector_code
+    sector['vocabulary_name'] = next(iter(data)).get('sector_vocabulary_name')
+    sector['vocabulary_code'] = next(iter(data)).get('sector_vocabulary_code')
 
     sector['aliases'] = data.unique('sector_name');
-    sector['orgs'] = data.unique(['org_name', 'org_id', 'org_type', 'org_role']).cache()
+    sector['orgs'] = data.unique(['org_name', 'org_code', 'org_type_name', 'org_type_code', 'org_role']).cache()
 
     return sector
 
