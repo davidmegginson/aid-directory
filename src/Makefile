@@ -29,6 +29,17 @@ import: ${SCRIPTS_DIR}/import-org-data.py ${VENV}
 run-app:
 	. ${VENV} && python -m flask --app aid_directory --debug run
 
+load-taxonomies:
+	. ${VENV} && python -m scripts.import-iati-taxonomy Countries ${TAXONOMIES_DIR}/Country.json
+	. ${VENV} && python -m scripts.import-iati-taxonomy OrgRoles ${TAXONOMIES_DIR}/OrganisationRole.json
+	. ${VENV} && python -m scripts.import-iati-taxonomy OrgTypes ${TAXONOMIES_DIR}/OrganisationType.json
+	. ${VENV} && python -m scripts.import-iati-taxonomy SectorVocabularies ${TAXONOMIES_DIR}/SectorVocabulary.json
+	. ${VENV} && python -m scripts.import-iati-taxonomy Sectors ${TAXONOMIES_DIR}/Sector.json 1
+	. ${VENV} && python -m scripts.import-iati-taxonomy Sectors ${TAXONOMIES_DIR}/SectorCategory.json 2
+	. ${VENV} && python -m scripts.import-iati-taxonomy Sectors ${TAXONOMIES_DIR}/UNSDG-Goals.json 7
+	. ${VENV} && python -m scripts.import-iati-taxonomy Sectors ${TAXONOMIES_DIR}/UNSDG-Targets.json 8
+	. ${VENV} && python -m scripts.import-iati-taxonomy Sectors ${TAXONOMIES_DIR}/Humanitarian-Clusters.json 10
+
 venv: ${VENV}
 
 clean:

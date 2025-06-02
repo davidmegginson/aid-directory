@@ -10,14 +10,15 @@ db = mysql.connector.connect (
     port=CONFIG.get('database_port', '3306'),
 )
 
-def get_cached (table_name, select_query, select_params, create_query, create_params):
+
+def get_cached (table_name, select_query, select_params, create_query=None, create_params=None,):
     """ Get a row from database, using a cached version if available """
     cache_key = (table_name,) + select_params
     if not cache_key in get_cached.cache:
         cursor = db.cursor(dictionary=True)
         cursor.execute(select_query, select_params)
         get_cached.cache[cache_key] = cursor.fetchone()
-        if get_cached.cache[cache_key] is None:
+        if (get_cached.cache[cache_key] is None) and (create_query is not None):
             cursor.execute(create_query, create_params)
             cursor.execute("SELECT * FROM {} WHERE id=last_insert_id()".format(table_name))
             get_cached.cache[cache_key] = cursor.fetchone()
@@ -28,32 +29,29 @@ get_cached.cache = dict()
 
 
 def get_org_type (row):
+    # do not create on demand
     return get_cached(
         'OrgTypes',
         'SELECT * FROM OrgTypes WHERE code=%s',
         (row['org_type_code'],),
-        'INSERT INTO OrgTypes (code, name) VALUES (%s, %s)',
-        (row['org_type_code'], row['org_type']),
     )
 
 
 def get_org_role (row):
+    # do not create on demand
     return get_cached(
         'OrgRoles',
         'SELECT * FROM OrgRoles WHERE code=%s',
-        (row['org_role'],),
-        'INSERT INTO OrgRoles (code, name) VALUES (%s, %s)',
-        (row['org_role'], row['org_role'],)
+        (row['org_role_code'],),
     )
 
 
 def get_country (row):
+    # do not create on demand
     return get_cached(
         'Countries',
         'SELECT * FROM Countries WHERE code=%s',
         (row['country_code'],),
-        'INSERT INTO Countries (code, name) VALUES (%s, %s)',
-        (row['country_code'], row['country_name'],)
     )
 
 
@@ -79,24 +77,30 @@ def get_activity (row):
 
 
 def get_sector_vocabulary (row):
+    # do not create on demand
     return get_cached(
         'SectorVocabularies',
         'SELECT * FROM SectorVocabularies WHERE code=%s',
         (row['sector_type_code'],),
-        'INSERT INTO SectorVocabularies (code, name) VALUES (%s, %s)',
-        (row['sector_type_code'], row['sector_type'],),
     )
 
 
 def get_sector (row):
     vocabulary = get_sector_vocabulary(row)
-    return get_cached(
-        'SectorView',
-        'SELECT * FROM SectorView WHERE vocabulary_ref=%s AND code=%s',
-        (vocabulary['id'], row['sector_code'],),
-        'INSERT INTO Sectors (vocabulary_ref, code, name) VALUES (%s, %s, %s)',
-        (vocabulary['id'], row['sector_code'], row['sector_name'],),
-    )
+    if row['sector_type_code'] in ('98', '99',):
+        return get_cached(
+            'SectorView',
+            'SELECT * FROM SectorView WHERE vocabulary_ref=%s AND code=%s',
+            (vocabulary['id'], row['sector_code'],),
+            'INSERT INTO Sectors (vocabulary_ref, code, name) VALUES (%s, %s, %s)',
+            (vocabulary['id'], row['sector_code'], row['sector_name'],),
+        )
+    else:
+        return get_cached(
+            'SectorView',
+            'SELECT * FROM SectorView WHERE vocabulary_ref=%s AND code=%s',
+            (vocabulary['id'], row['sector_code'],),
+        )
         
 
 def get_org_instance (row):
@@ -124,15 +128,17 @@ def get_org_activity (row):
         (activity['id'], org_instance['id'], sector['id'], country['id'], org_role['id'], row['relationship_index'],),
         'INSERT INTO OrgActivities (activity_ref, org_instance_ref, sector_ref, country_ref, org_role_ref, relationship_index) VALUES (%s, %s, %s, %s, %s, %s)',
         (activity['id'], org_instance['id'], sector['id'], country['id'], org_role['id'], row['relationship_index'],),
-    )        
+    )
 
 
 def import_data (stream):
     input = csv.DictReader(stream)
     for row in input:
+        print(row)
         org_activity = get_org_activity(row)
     db.commit()
 
 if __name__ == '__main__':
+
     with open('../outputs/orgs.csv', 'r') as stream:
         import_data(stream)

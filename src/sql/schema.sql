@@ -42,7 +42,7 @@ CREATE TABLE Sectors (
   id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
   code VARCHAR(256) NOT NULL,
   vocabulary_ref INT NOT NULL,
-  name VARCHAR(512) NOT NULL,
+  name TEXT NOT NULL,
   UNIQUE(code, vocabulary_ref),
   FOREIGN KEY (vocabulary_ref) REFERENCES SectorVocabularies(id)
 );

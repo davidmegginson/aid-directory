@@ -140,7 +140,8 @@ def show_org (output, org, activity, country, sector, default_role='', relations
         sector_code,
         sector_type,
         sector_type_code,
-        get_codelist('OrganisationRole').get(org.role, '') if org.role else default_role,
+        org.role if org.role else default_role[0],
+        get_codelist('OrganisationRole').get(org.role, '') if org.role else default_role[1],
         relationship_index,
     ])
 
@@ -155,7 +156,7 @@ def show_activity (output, activity):
         for sector in activity.sectors:
     
             """ Display an activity to standard output """
-            show_org(output, activity.reporting_org, activity, country, sector, 'Reporting')
+            show_org(output, activity.reporting_org, activity, country, sector, ('990', 'Reporting,'))
 
             for org in activity.participating_orgs:
                 show_org(output, org, activity, country, sector)
@@ -163,9 +164,9 @@ def show_activity (output, activity):
             relationships = reduce_transactions(activity)
             for (n, relationship) in enumerate(relationships):
                 if relationship[0]:
-                    show_org(output, relationship[0], activity, country, sector, 'Provider', n)
+                    show_org(output, relationship[0], activity, country, sector, ('991', 'Provider',), n)
                 if relationship[1]:
-                    show_org(output, relationship[1], activity, country, sector, 'Receiver', n)
+                    show_org(output, relationship[1], activity, country, sector, ('992', 'Receiver',), n)
 
             
 def show_activities (activities, file=None):
@@ -192,7 +193,8 @@ def show_activities (activities, file=None):
         'sector_code',
         'sector_type',
         'sector_type_code',
-        'org_role',
+        'org_role_code',
+        'org_role_name',
         'relationship_index',
     ])
 
@@ -205,7 +207,7 @@ def show_activities (activities, file=None):
 
 if __name__ == '__main__':
     activities = Iterator({
-        "country_code": "mg", # Kenya
+        "country_code": "mg", # Madagascar
         "status_code": "2",   # implementation
     })
     show_activities(activities)
