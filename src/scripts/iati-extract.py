@@ -103,11 +103,15 @@ def show_org (output, org, activity, country, sector, default_role='', relations
     sector_code = sector.code
     sector_name = str(sector.narrative)
     sector_type_code = str(sector.vocabulary)
+    if sector_type_code is None or sector_type_code == '':
+        sector_type_code = '1'
 
-    # Normalise DAC purpose codes (roll up to 3-character categories)
-    if sector_type_code in ('1', '2',):
-        sector_type_code = '2'
-        sector_code = sector_code[:3]
+    # Normalise purpose codes
+    if sector_type_code == '1':
+        sector_name = get_codelist('Sector').get(sector_code, sector_name)
+
+    # DAC sector categories
+    elif sector_type_code == '2':
         sector_name = get_codelist('SectorCategory').get(sector_code, sector_name)
 
     # Normalise SDG Goals
@@ -156,10 +160,10 @@ def show_activity (output, activity):
         for sector in activity.sectors:
     
             """ Display an activity to standard output """
-            show_org(output, activity.reporting_org, activity, country, sector, ('990', 'Reporting,'))
+            show_org(output, activity.reporting_org, activity, country, sector, ('990', 'Reporting',))
 
             for org in activity.participating_orgs:
-                show_org(output, org, activity, country, sector)
+                show_org(output, org, activity, country, sector, ('999', 'Unspecified',))
 
             relationships = reduce_transactions(activity)
             for (n, relationship) in enumerate(relationships):

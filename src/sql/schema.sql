@@ -59,6 +59,14 @@ CREATE TABLE OrgRoles (
   name VARCHAR(128) NOT NULL
 );
 
+-- Extra roles (not in IATI codelist)
+INSERT INTO OrgRoles (code, name)
+VALUES
+('990', 'Reporting'),
+('991', 'Provider'),
+('992', 'Receiver'),
+('999', '(Unspecified)');
+
 CREATE TABLE OrgTypes (
   id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
   code VARCHAR(8) UNIQUE NOT NULL,
